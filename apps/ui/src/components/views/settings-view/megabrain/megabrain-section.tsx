@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Brain, Server, Sparkles, Scale, Zap, Database, RefreshCw } from 'lucide-react';
+import {
+  Brain,
+  Server,
+  Sparkles,
+  Scale,
+  Zap,
+  Database,
+  RefreshCw,
+  Play,
+  Loader2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -41,6 +51,8 @@ export function MegabrainSection() {
     'checking'
   );
   const [vdbStatus, setVdbStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [isStarting, setIsStarting] = useState(false);
+  const [startMessage, setStartMessage] = useState<string | null>(null);
 
   // Synchronisiere lokale States mit Store-Werten (wichtig beim Laden gespeicherter Settings)
   useEffect(() => {
@@ -102,6 +114,39 @@ export function MegabrainSection() {
       setVdbStatus(response.ok ? 'online' : 'offline');
     } catch {
       setVdbStatus('offline');
+    }
+  };
+
+  const startMegabrain = async () => {
+    setIsStarting(true);
+    setStartMessage(null);
+    try {
+      const serverPort = import.meta.env.VITE_SERVER_PORT || '3008';
+      const baseUrl = `http://localhost:${serverPort}`;
+      const response = await fetch(`${baseUrl}/api/megabrain/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(60000), // 60s Timeout für Start
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMegabrainStatus('online');
+        setStartMessage(data.message || 'MEGABRAIN gestartet');
+        // Aktualisiere VDB-Status falls in Antwort enthalten
+        if (data.vdb_available !== undefined) {
+          setVdbStatus(data.vdb_available ? 'online' : 'offline');
+        }
+      } else {
+        setStartMessage(data.message || 'Start fehlgeschlagen');
+      }
+    } catch (error) {
+      setStartMessage(error instanceof Error ? error.message : 'Verbindungsfehler');
+    } finally {
+      setIsStarting(false);
+      // Nach 5 Sekunden Nachricht ausblenden
+      setTimeout(() => setStartMessage(null), 5000);
     }
   };
 
@@ -210,8 +255,43 @@ export function MegabrainSection() {
                 <Brain className="w-5 h-5 text-blue-500" />
                 <span className="font-medium">MEGABRAIN Server</span>
               </div>
-              <StatusBadge status={megabrainStatus} />
+              <div className="flex items-center gap-2">
+                <StatusBadge status={megabrainStatus} />
+                {megabrainStatus === 'offline' && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={startMegabrain}
+                    disabled={isStarting}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {isStarting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        Startet...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-1" />
+                        Starten
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
+            {startMessage && (
+              <div
+                className={cn(
+                  'text-xs px-2 py-1 rounded',
+                  megabrainStatus === 'online'
+                    ? 'bg-green-500/20 text-green-500'
+                    : 'bg-yellow-500/20 text-yellow-500'
+                )}
+              >
+                {startMessage}
+              </div>
+            )}
 
             <div className="grid gap-3">
               <div>
