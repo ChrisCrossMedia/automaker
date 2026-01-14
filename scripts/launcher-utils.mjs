@@ -1374,12 +1374,14 @@ export async function launchDockerContainers({ baseDir, processes }) {
 
 const MEGABRAIN_PATH = '/Users/chriscrossmedia/Megabrain 8.0';
 const MEGABRAIN_API_PORT = 8081;
+const QDRANT_HOST = '192.168.10.1';
+const QDRANT_PORT = 6333;
 
 /**
- * Check if MEGABRAIN 8 is already running
- * @returns {Promise<boolean>} True if MEGABRAIN is running on port 8081
+ * Check if MEGABRAIN 8 API is running and healthy
+ * @returns {Promise<{running: boolean, details: object}>} Health status
  */
-async function isMegabrainRunning() {
+async function checkMegabrainHealth() {
   return new Promise((resolve) => {
     const req = http.request(
       {
@@ -1387,7 +1389,46 @@ async function isMegabrainRunning() {
         port: MEGABRAIN_API_PORT,
         path: '/health',
         method: 'GET',
-        timeout: 2000,
+        timeout: 3000,
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            const health = JSON.parse(data);
+            resolve({
+              running: res.statusCode === 200 && health.status === 'healthy',
+              details: health,
+            });
+          } catch {
+            resolve({ running: res.statusCode === 200, details: {} });
+          }
+        });
+      }
+    );
+    req.on('error', () => resolve({ running: false, details: {} }));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve({ running: false, details: {} });
+    });
+    req.end();
+  });
+}
+
+/**
+ * Check if Qdrant VDB is reachable
+ * @returns {Promise<boolean>} True if VDB is reachable
+ */
+async function checkVDBHealth() {
+  return new Promise((resolve) => {
+    const req = http.request(
+      {
+        hostname: QDRANT_HOST,
+        port: QDRANT_PORT,
+        path: '/collections',
+        method: 'GET',
+        timeout: 3000,
       },
       (res) => {
         resolve(res.statusCode === 200);
@@ -1403,94 +1444,165 @@ async function isMegabrainRunning() {
 }
 
 /**
+ * Check if MEGABRAIN 8 is already running (legacy wrapper)
+ * @returns {Promise<boolean>} True if MEGABRAIN is running on port 8081
+ */
+async function isMegabrainRunning() {
+  const health = await checkMegabrainHealth();
+  return health.running;
+}
+
+/**
  * Start MEGABRAIN 8 API server
  * Runs megabrain8_startup.py in the background
+ * Waits for both API and VDB to be fully ready before returning
  * @param {object} processes - Processes object to track megabrain process
  * @returns {Promise<boolean>} True if MEGABRAIN started successfully
  */
 export async function startMegabrain8(processes = {}) {
-  // Check if already running
-  if (await isMegabrainRunning()) {
-    log('MEGABRAIN 8 is already running on port ' + MEGABRAIN_API_PORT, 'green');
+  log('═══════════════════════════════════════════════════════════', 'blue');
+  log('  MEGABRAIN 8 Startup', 'blue');
+  log('═══════════════════════════════════════════════════════════', 'blue');
+
+  // Step 1: Check VDB (Qdrant) availability first
+  log('Prüfe Qdrant VDB Verbindung (192.168.10.1:6333)...', 'yellow');
+  const vdbAvailable = await checkVDBHealth();
+  if (vdbAvailable) {
+    log('✓ Qdrant VDB erreichbar', 'green');
+  } else {
+    log('⚠ Qdrant VDB nicht erreichbar auf 192.168.10.1:6333', 'yellow');
+    log('  MEGABRAIN RAG-Features werden nicht verfügbar sein', 'yellow');
+  }
+
+  // Step 2: Check if MEGABRAIN API is already running
+  const currentHealth = await checkMegabrainHealth();
+  if (currentHealth.running) {
+    log('✓ MEGABRAIN 8 API läuft bereits auf Port ' + MEGABRAIN_API_PORT, 'green');
+    if (currentHealth.details && currentHealth.details.services) {
+      const services = currentHealth.details.services;
+      log(`  Services: API=${services.api || '?'}, VDB=${services.vdb || '?'}`, 'blue');
+    }
+    log('═══════════════════════════════════════════════════════════', 'green');
     return true;
   }
 
-  log('Starting MEGABRAIN 8...', 'blue');
+  log('MEGABRAIN 8 wird gestartet...', 'blue');
 
-  // Check if MEGABRAIN path exists
+  // Step 3: Check if MEGABRAIN path exists
   if (!fsNative.existsSync(MEGABRAIN_PATH)) {
-    log('Warning: MEGABRAIN 8 path not found: ' + MEGABRAIN_PATH, 'yellow');
-    log('MEGABRAIN features will not be available.', 'yellow');
+    log('⚠ MEGABRAIN 8 Pfad nicht gefunden: ' + MEGABRAIN_PATH, 'yellow');
+    log('  MEGABRAIN-Features werden nicht verfügbar sein.', 'yellow');
+    log('═══════════════════════════════════════════════════════════', 'yellow');
     return false;
   }
 
-  // Check if startup script exists
+  // Step 4: Check if startup script exists
   const startupScript = path.join(MEGABRAIN_PATH, 'megabrain8_startup.py');
   if (!fsNative.existsSync(startupScript)) {
-    log('Warning: MEGABRAIN startup script not found: ' + startupScript, 'yellow');
+    log('⚠ MEGABRAIN Startup-Script nicht gefunden: ' + startupScript, 'yellow');
+    log('═══════════════════════════════════════════════════════════', 'yellow');
     return false;
   }
 
   try {
-    // Start MEGABRAIN in background with detached process
+    // Step 5: Start MEGABRAIN in background with detached process
+    // Using stdio: 'ignore' for stdin to prevent any terminal interaction
+    // Using 'pipe' for stdout/stderr to capture logs without terminal
     const megabrainProcess = crossSpawn('python3', [startupScript], {
       cwd: MEGABRAIN_PATH,
       detached: true,
+      // WICHTIG: Kein Terminal öffnen - komplett im Hintergrund
       stdio: ['ignore', 'pipe', 'pipe'],
+      // Prevent window creation on Windows
+      windowsHide: true,
       env: {
         ...process.env,
         MEGABRAIN_INSTANCE_ID: 'automaker',
         MEGABRAIN_INSTANCE_TYPE: 'api',
+        // Suppress Python buffering for immediate output
+        PYTHONUNBUFFERED: '1',
       },
     });
 
-    // Store reference for cleanup
+    // Store reference for tracking (not cleanup - MEGABRAIN runs independently)
     if (processes) {
       processes.megabrain = megabrainProcess;
     }
 
-    // Unref to allow parent to exit independently (but we'll manage cleanup)
+    // Unref to allow parent to exit independently
+    // MEGABRAIN should continue running after Automaker exits
     megabrainProcess.unref();
 
-    // Log output for debugging
-    if (megabrainProcess.stdout) {
-      megabrainProcess.stdout.on('data', (data) => {
+    // Capture errors for debugging
+    let lastError = '';
+    if (megabrainProcess.stderr) {
+      megabrainProcess.stderr.on('data', (data) => {
         const line = data.toString().trim();
-        if (line.includes('ERROR') || line.includes('error')) {
+        if (line && (line.includes('ERROR') || line.includes('error') || line.includes('Traceback'))) {
+          lastError = line;
           log('[MEGABRAIN] ' + line, 'red');
         }
       });
     }
 
-    if (megabrainProcess.stderr) {
-      megabrainProcess.stderr.on('data', (data) => {
-        const line = data.toString().trim();
-        if (line && !line.includes('INFO')) {
-          log('[MEGABRAIN] ' + line, 'yellow');
-        }
-      });
-    }
+    // Step 6: Wait for MEGABRAIN to become fully healthy
+    // Check both API and VDB connectivity
+    log('Warte auf vollständigen MEGABRAIN 8 Start...', 'yellow');
+    const maxRetries = 60; // 60 Sekunden Timeout
+    let apiReady = false;
+    let vdbReady = vdbAvailable; // Bereits geprüft
 
-    // Wait for MEGABRAIN to become healthy (max 30 seconds)
-    log('Waiting for MEGABRAIN 8 to start...', 'yellow');
-    const maxRetries = 30;
     for (let i = 0; i < maxRetries; i++) {
       await sleep(1000);
-      if (await isMegabrainRunning()) {
-        log('MEGABRAIN 8 started successfully on port ' + MEGABRAIN_API_PORT, 'green');
+
+      // Check API health
+      const health = await checkMegabrainHealth();
+      apiReady = health.running;
+
+      // Check VDB again if not yet ready
+      if (!vdbReady) {
+        vdbReady = await checkVDBHealth();
+      }
+
+      // Progress indicator
+      if (i > 0 && i % 5 === 0) {
+        const apiStatus = apiReady ? '✓' : '○';
+        const vdbStatus = vdbReady ? '✓' : '○';
+        log(`  [${i}s] API: ${apiStatus}  VDB: ${vdbStatus}`, 'yellow');
+      }
+
+      // Both ready - success!
+      if (apiReady && vdbReady) {
+        console.log('');
+        log('✓ MEGABRAIN 8 vollständig gestartet!', 'green');
+        log(`  API: http://localhost:${MEGABRAIN_API_PORT}`, 'green');
+        log(`  VDB: http://${QDRANT_HOST}:${QDRANT_PORT}`, 'green');
+        log('═══════════════════════════════════════════════════════════', 'green');
         return true;
       }
-      if (i > 0 && i % 5 === 0) {
-        process.stdout.write('.');
+
+      // API ready but VDB not available - warn but continue
+      if (apiReady && !vdbReady && i >= 10) {
+        console.log('');
+        log('✓ MEGABRAIN 8 API gestartet (Port ' + MEGABRAIN_API_PORT + ')', 'green');
+        log('⚠ VDB nicht verfügbar - RAG-Features deaktiviert', 'yellow');
+        log('═══════════════════════════════════════════════════════════', 'yellow');
+        return true;
       }
     }
 
+    // Timeout reached
     console.log('');
-    log('Warning: MEGABRAIN 8 did not become healthy within 30 seconds', 'yellow');
-    log('MEGABRAIN features may not be available.', 'yellow');
+    log('⚠ MEGABRAIN 8 Timeout nach 60 Sekunden', 'yellow');
+    if (lastError) {
+      log('  Letzter Fehler: ' + lastError, 'red');
+    }
+    log('  MEGABRAIN-Features werden möglicherweise nicht verfügbar sein.', 'yellow');
+    log('═══════════════════════════════════════════════════════════', 'yellow');
     return false;
   } catch (error) {
-    log('Error starting MEGABRAIN 8: ' + error.message, 'red');
+    log('Fehler beim Starten von MEGABRAIN 8: ' + error.message, 'red');
+    log('═══════════════════════════════════════════════════════════', 'red');
     return false;
   }
 }
