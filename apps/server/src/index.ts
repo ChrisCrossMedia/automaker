@@ -67,6 +67,13 @@ import { createPipelineRoutes } from './routes/pipeline/index.js';
 import { pipelineService } from './services/pipeline-service.js';
 import { createIdeationRoutes } from './routes/ideation/index.js';
 import { IdeationService } from './services/ideation-service.js';
+import { PrivacyGuard } from './services/privacy-guard-service.js';
+import { createPrivacyGuardRoutes } from './routes/privacy-guard/index.js';
+import { VDBService } from './services/vdb-service.js';
+import { createVDBRoutes } from './routes/vdb/index.js';
+import { createSelfLearningRoutes } from './routes/self-learning/index.js';
+import { MegabrainService } from './services/megabrain-service.js';
+import megabrainRoutes from './routes/megabrain/index.js';
 
 // Load environment variables
 dotenv.config();
@@ -181,6 +188,64 @@ const ideationService = new IdeationService(events, settingsService, featureLoad
   await agentService.initialize();
   logger.info('Agent service initialized');
 
+  // Privacy Guard Health-Check beim Start
+  try {
+    const privacyGuardOk = await PrivacyGuard.healthCheck();
+    if (privacyGuardOk) {
+      logger.info('✓ Privacy Guard initialisiert');
+    } else {
+      logger.warn(
+        '⚠️ Privacy Guard Selbsttest fehlgeschlagen - Anonymisierung möglicherweise eingeschränkt'
+      );
+    }
+  } catch (error) {
+    logger.error('❌ Privacy Guard Health-Check fehlgeschlagen:', error);
+  }
+
+  // VDB (MEGABRAIN) Health-Check beim Start
+  try {
+    const vdbOk = await VDBService.healthCheck();
+    if (vdbOk) {
+      logger.info('✓ VDB (MEGABRAIN) initialisiert auf 192.168.10.1:6333');
+    } else {
+      logger.warn('⚠️ VDB nicht erreichbar - Wissensmanagement eingeschränkt');
+    }
+  } catch (error) {
+    logger.error('❌ VDB Health-Check fehlgeschlagen:', error);
+  }
+
+  // MEGABRAIN 8 Auto-Start beim Serverstart
+  try {
+    // Lade MEGABRAIN-Einstellungen aus dem SettingsService
+    // MEGABRAIN API läuft auf dem Host-Mac, nicht auf 192.168.10.1
+    // Im Container: host.docker.internal, sonst: localhost
+    const isContainerizedEnv = process.env.IS_CONTAINERIZED === 'true';
+    const megabrainHost = isContainerizedEnv ? 'host.docker.internal' : 'localhost';
+    const defaultApiUrl = `http://${megabrainHost}:8081`;
+    const defaultWsUrl = `ws://${megabrainHost}:8082`;
+
+    const globalSettings = await settingsService.getGlobalSettings();
+    const megabrainSettings = {
+      enabled: globalSettings.megabrainEnabled ?? false,
+      apiUrl: globalSettings.megabrainApiUrl ?? defaultApiUrl,
+      wsUrl: globalSettings.megabrainWsUrl ?? defaultWsUrl,
+      ragEnabled: globalSettings.megabrainRagEnabled ?? true,
+      skillsEnabled: globalSettings.megabrainSkillsEnabled ?? true,
+      advocatusEnabled: globalSettings.megabrainAdvocatusEnabled ?? true,
+    };
+
+    const megabrainOk = await MegabrainService.initialize(megabrainSettings);
+    if (megabrainOk) {
+      logger.info('✓ MEGABRAIN 8 initialisiert und verbunden');
+    } else if (megabrainSettings.enabled) {
+      logger.warn('⚠️ MEGABRAIN 8 aktiviert aber nicht erreichbar');
+    } else {
+      logger.info('ℹ️ MEGABRAIN 8 deaktiviert - kann in den Einstellungen aktiviert werden');
+    }
+  } catch (error) {
+    logger.error('❌ MEGABRAIN 8 Initialisierung fehlgeschlagen:', error);
+  }
+
   // Bootstrap Codex model cache in background (don't block server startup)
   void codexModelCacheService.getModels().catch((err) => {
     logger.error('Failed to bootstrap Codex model cache:', err);
@@ -200,10 +265,11 @@ setInterval(() => {
 // This helps prevent CSRF and content-type confusion attacks
 app.use('/api', requireJsonContentType);
 
-// Mount API routes - health, auth, and setup are unauthenticated
+// Mount API routes - health, auth, setup, and megabrain-health are unauthenticated
 app.use('/api/health', createHealthRoutes());
 app.use('/api/auth', createAuthRoutes());
 app.use('/api/setup', createSetupRoutes());
+app.use('/api/megabrain', megabrainRoutes); // Unauthenticated for CORS proxy
 
 // Apply authentication to all other routes
 app.use('/api', authMiddleware);
@@ -235,6 +301,9 @@ app.use('/api/backlog-plan', createBacklogPlanRoutes(events, settingsService));
 app.use('/api/mcp', createMCPRoutes(mcpTestService));
 app.use('/api/pipeline', createPipelineRoutes(pipelineService));
 app.use('/api/ideation', createIdeationRoutes(events, ideationService, featureLoader));
+app.use('/api/privacy-guard', createPrivacyGuardRoutes());
+app.use('/api/vdb', createVDBRoutes());
+app.use('/api/self-learning', createSelfLearningRoutes());
 
 // Create HTTP server
 const server = createServer(app);

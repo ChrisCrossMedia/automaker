@@ -35,6 +35,8 @@ export function TaskProgressPanel({
   const [tasks, setTasks] = useState<TaskInfo[]>([]);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isLoading, setIsLoading] = useState(true);
+  // Note: currentTaskId state is maintained for potential future use (e.g., highlighting)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
 
   // Load initial tasks from feature's planSpec
@@ -52,15 +54,25 @@ export function TaskProgressPanel({
       }
 
       const result = await api.features.get(projectPath, featureId);
-      const feature: any = (result as any).feature;
+      const feature = (
+        result as {
+          feature?: {
+            planSpec?: {
+              tasks?: Array<{ id: string; description: string; filePath?: string; phase?: string }>;
+              currentTaskId?: string;
+              tasksCompleted?: number;
+            };
+          };
+        }
+      ).feature;
       if (result.success && feature?.planSpec?.tasks) {
-        const planSpec = feature.planSpec as any;
+        const planSpec = feature.planSpec;
         const planTasks = planSpec.tasks;
         const currentId = planSpec.currentTaskId;
         const completedCount = planSpec.tasksCompleted || 0;
 
         // Convert planSpec tasks to TaskInfo with proper status
-        const initialTasks: TaskInfo[] = planTasks.map((t: any, index: number) => ({
+        const initialTasks: TaskInfo[] = planTasks.map((t, index: number) => ({
           id: t.id,
           description: t.description,
           filePath: t.filePath,
@@ -235,7 +247,7 @@ export function TaskProgressPanel({
             <div className="absolute left-[2.35rem] top-4 bottom-8 w-px bg-linear-to-b from-border/80 via-border/40 to-transparent" />
 
             <div className="space-y-5">
-              {tasks.map((task, index) => {
+              {tasks.map((task, _index) => {
                 const isActive = task.status === 'in_progress';
                 const isCompleted = task.status === 'completed';
                 const isPending = task.status === 'pending';

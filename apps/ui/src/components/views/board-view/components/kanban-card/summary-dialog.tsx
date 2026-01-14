@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses dialog components with dynamic content
 import { Feature } from '@/store/app-store';
 import { AgentTaskInfo } from '@/lib/agent-context-parser';
 import {

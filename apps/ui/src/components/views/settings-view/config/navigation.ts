@@ -7,15 +7,14 @@ import {
   Palette,
   Settings2,
   Volume2,
-  FlaskConical,
   Trash2,
-  Workflow,
   Plug,
   MessageSquareText,
   User,
   Shield,
-  Cpu,
   GitBranch,
+  Brain,
+  Server,
 } from 'lucide-react';
 import { AnthropicIcon, CursorIcon, OpenAIIcon, OpenCodeIcon } from '@/components/ui/provider-icon';
 import type { SettingsViewId } from '../hooks/use-settings-view';
@@ -35,16 +34,15 @@ export interface NavigationGroup {
 // Global settings organized into groups
 export const GLOBAL_NAV_GROUPS: NavigationGroup[] = [
   {
-    label: 'Model & Prompts',
+    label: 'Modell & Prompts',
     items: [
-      { id: 'model-defaults', label: 'Model Defaults', icon: Workflow },
-      { id: 'defaults', label: 'Feature Defaults', icon: FlaskConical },
+      { id: 'llm-mode', label: 'LLM-Modus', icon: Server },
       { id: 'worktrees', label: 'Worktrees', icon: GitBranch },
-      { id: 'prompts', label: 'Prompt Customization', icon: MessageSquareText },
-      { id: 'api-keys', label: 'API Keys', icon: Key },
+      { id: 'prompts', label: 'Prompt-Anpassung', icon: MessageSquareText },
+      { id: 'api-keys', label: 'API-Schlüssel', icon: Key },
       {
         id: 'providers',
-        label: 'AI Providers',
+        label: 'KI-Anbieter',
         icon: Bot,
         subItems: [
           { id: 'claude-provider', label: 'Claude', icon: AnthropicIcon },
@@ -53,23 +51,27 @@ export const GLOBAL_NAV_GROUPS: NavigationGroup[] = [
           { id: 'opencode-provider', label: 'OpenCode', icon: OpenCodeIcon },
         ],
       },
-      { id: 'mcp-servers', label: 'MCP Servers', icon: Plug },
+      { id: 'mcp-servers', label: 'MCP-Server', icon: Plug },
     ],
   },
   {
-    label: 'Interface',
+    label: 'Oberfläche',
     items: [
-      { id: 'appearance', label: 'Appearance', icon: Palette },
+      { id: 'appearance', label: 'Erscheinungsbild', icon: Palette },
       { id: 'terminal', label: 'Terminal', icon: SquareTerminal },
-      { id: 'keyboard', label: 'Keyboard Shortcuts', icon: Settings2 },
+      { id: 'keyboard', label: 'Tastenkürzel', icon: Settings2 },
       { id: 'audio', label: 'Audio', icon: Volume2 },
     ],
   },
   {
-    label: 'Account & Security',
+    label: 'KI & Integration',
+    items: [{ id: 'megabrain', label: 'MEGABRAIN 8', icon: Brain }],
+  },
+  {
+    label: 'Konto & Sicherheit',
     items: [
-      { id: 'account', label: 'Account', icon: User },
-      { id: 'security', label: 'Security', icon: Shield },
+      { id: 'account', label: 'Konto', icon: User },
+      { id: 'security', label: 'Sicherheit', icon: Shield },
     ],
   },
 ];
@@ -79,7 +81,7 @@ export const GLOBAL_NAV_ITEMS: NavigationItem[] = GLOBAL_NAV_GROUPS.flatMap((gro
 
 // Project-specific settings - only visible when a project is selected
 export const PROJECT_NAV_ITEMS: NavigationItem[] = [
-  { id: 'danger', label: 'Danger Zone', icon: Trash2 },
+  { id: 'danger', label: 'Gefahrenzone', icon: Trash2 },
 ];
 
 // Legacy export for backwards compatibility

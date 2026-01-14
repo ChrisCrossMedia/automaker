@@ -100,8 +100,8 @@ export function getStoredTheme(): ThemeMode | null {
   try {
     const legacy = getItem('automaker-storage');
     if (!legacy) return null;
-    const parsed = JSON.parse(legacy) as { state?: { theme?: unknown } } | { theme?: unknown };
-    const theme = (parsed as any)?.state?.theme ?? (parsed as any)?.theme;
+    const parsed = JSON.parse(legacy) as { state?: { theme?: unknown }; theme?: unknown };
+    const theme = parsed?.state?.theme ?? parsed?.theme;
     if (typeof theme === 'string' && theme.length > 0) {
       return theme as ThemeMode;
     }
@@ -604,6 +604,31 @@ export interface AppState {
   autoLoadClaudeMd: boolean; // Auto-load CLAUDE.md files using SDK's settingSources option
   skipSandboxWarning: boolean; // Skip the sandbox environment warning dialog on startup
 
+  // Privacy Guard Settings
+  privacyGuardEnabled: boolean; // Enable local anonymization of sensitive data before sending to AI (default: false)
+  privacyGuardModel: string; // Ollama model to use for anonymization (default: 'qwen2.5:7b')
+  privacyGuardOllamaUrl: string; // Ollama URL for anonymization (default: 'http://localhost:11434')
+
+  // LLM Mode Settings
+  llmMode: 'cloud' | 'local' | 'mixed'; // Which LLM backend to use (default: 'cloud')
+  localPhaseModels: Record<string, string>; // Local Ollama models for each phase
+  mixedModeConfig: Record<string, boolean>; // Which tasks use local vs cloud in mixed mode
+  ollamaUrl: string; // Ollama URL for local LLM operations (default: 'http://localhost:11434')
+
+  // VDB/Knowledgebase Settings
+  vdbUrl: string; // Qdrant VDB URL (default: 'http://192.168.10.1:6333')
+  vdbCollection: string; // Default collection for knowledge storage (default: 'automaker_knowledge')
+
+  // MEGABRAIN 8 Integration Settings
+  megabrainEnabled: boolean; // Enable MEGABRAIN integration (default: false)
+  megabrainApiUrl: string; // MEGABRAIN API URL (default: 'http://192.168.10.1:8081')
+  megabrainWsUrl: string; // MEGABRAIN WebSocket URL (default: 'ws://192.168.10.1:8082')
+  megabrainRagEnabled: boolean; // Use MEGABRAIN RAG for enhanced context (default: true)
+  selectedEnhancementMode: 'improve' | 'technical' | 'simplify' | 'acceptance' | 'ux' | null; // Selected enhancement prompt mode for Agent Runner
+  megabrainSkillsEnabled: boolean; // Enable MEGABRAIN Skills execution (default: true)
+  megabrainAdvocatusEnabled: boolean; // Enable Advocatus Diaboli review workflow (default: false)
+  megabrainExpertsEnabled: boolean; // Include expert opinions in responses (default: false)
+
   // MCP Servers
   mcpServers: MCPServerConfig[]; // List of configured MCP servers for agent use
 
@@ -1012,6 +1037,30 @@ export interface AppActions {
   // Claude Agent SDK Settings actions
   setAutoLoadClaudeMd: (enabled: boolean) => Promise<void>;
   setSkipSandboxWarning: (skip: boolean) => Promise<void>;
+  setPrivacyGuardEnabled: (enabled: boolean) => Promise<void>;
+  setPrivacyGuardModel: (model: string) => Promise<void>;
+  setPrivacyGuardOllamaUrl: (url: string) => Promise<void>;
+
+  // LLM Mode actions
+  setLlmMode: (mode: 'cloud' | 'local' | 'mixed') => Promise<void>;
+  setLocalPhaseModel: (phase: string, model: string) => Promise<void>;
+  setMixedModeConfig: (key: string, value: boolean) => Promise<void>;
+  setOllamaUrl: (url: string) => Promise<void>;
+
+  setVdbUrl: (url: string) => Promise<void>;
+  setVdbCollection: (collection: string) => Promise<void>;
+
+  // MEGABRAIN Integration actions
+  setMegabrainEnabled: (enabled: boolean) => Promise<void>;
+  setMegabrainApiUrl: (url: string) => Promise<void>;
+  setMegabrainWsUrl: (url: string) => Promise<void>;
+  setMegabrainRagEnabled: (enabled: boolean) => Promise<void>;
+  setSelectedEnhancementMode: (
+    mode: 'improve' | 'technical' | 'simplify' | 'acceptance' | 'ux' | null
+  ) => void;
+  setMegabrainSkillsEnabled: (enabled: boolean) => Promise<void>;
+  setMegabrainAdvocatusEnabled: (enabled: boolean) => Promise<void>;
+  setMegabrainExpertsEnabled: (enabled: boolean) => Promise<void>;
 
   // Editor Configuration actions
   setDefaultEditorCommand: (command: string | null) => void;
@@ -1245,6 +1294,50 @@ const initialState: AppState = {
   cachedOpencodeProviders: [], // Empty until fetched from OpenCode CLI
   autoLoadClaudeMd: false, // Default to disabled (user must opt-in)
   skipSandboxWarning: false, // Default to disabled (show sandbox warning dialog)
+  privacyGuardEnabled: false, // Default to disabled (user must opt-in for local anonymization)
+  privacyGuardModel: 'qwen2.5:7b', // Default Ollama model for anonymization
+  privacyGuardOllamaUrl: 'http://localhost:11434', // Default Ollama URL
+
+  // LLM Mode defaults
+  llmMode: 'cloud', // Default to cloud LLM (Claude API)
+  localPhaseModels: {
+    enhancementModel: 'qwen2.5:3b',
+    fileDescriptionModel: 'qwen2.5:3b',
+    imageDescriptionModel: 'moondream',
+    validationModel: 'qwen2.5:7b',
+    specGenerationModel: 'qwen2.5-coder:7b',
+    featureGenerationModel: 'qwen2.5-coder:7b',
+    backlogPlanningModel: 'qwen2.5:7b',
+    projectAnalysisModel: 'qwen2.5:7b',
+    suggestionsModel: 'qwen2.5-coder:7b',
+    memoryExtractionModel: 'qwen2.5:3b',
+  },
+  mixedModeConfig: {
+    localForEnhancement: true,
+    localForFileDescription: true,
+    localForImageDescription: true,
+    localForValidation: false,
+    localForMemoryExtraction: true,
+    cloudForSpecGeneration: true,
+    cloudForFeatureGeneration: true,
+    cloudForBacklogPlanning: true,
+  },
+  ollamaUrl: 'http://localhost:11434', // Default Ollama URL for local LLMs
+
+  vdbUrl: 'http://192.168.10.1:6333', // Default Qdrant VDB URL
+  vdbCollection: 'automaker_knowledge', // Default collection
+
+  // MEGABRAIN 8 Integration defaults
+  // MEGABRAIN API läuft auf dem Host-Mac, nicht auf 192.168.10.1!
+  megabrainEnabled: false, // Default to disabled (user must opt-in)
+  megabrainApiUrl: 'http://localhost:8081', // Default MEGABRAIN API URL (Host-Mac)
+  megabrainWsUrl: 'ws://localhost:8082', // Default MEGABRAIN WebSocket URL (Host-Mac)
+  megabrainRagEnabled: false, // RAG enhancement disabled by default - user must opt-in
+  selectedEnhancementMode: null, // No enhancement prompt selected by default
+  megabrainSkillsEnabled: true, // Skills execution enabled by default when MEGABRAIN is enabled
+  megabrainAdvocatusEnabled: false, // Advocatus Diaboli disabled by default
+  megabrainExpertsEnabled: false, // Expert opinions disabled by default
+
   mcpServers: [], // No MCP servers configured by default
   defaultEditorCommand: null, // Auto-detect: Cursor > VS Code > first available
   enableSkills: true, // Skills enabled by default
@@ -2090,6 +2183,174 @@ export const useAppStore = create<AppState & AppActions>()((set, get) => ({
     if (!ok) {
       logger.error('Failed to sync skipSandboxWarning setting to server - reverting');
       set({ skipSandboxWarning: previous });
+    }
+  },
+  setPrivacyGuardEnabled: async (enabled) => {
+    const previous = get().privacyGuardEnabled;
+    set({ privacyGuardEnabled: enabled });
+    // Sync to server settings file
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync privacyGuardEnabled setting to server - reverting');
+      set({ privacyGuardEnabled: previous });
+    }
+  },
+  setPrivacyGuardModel: async (model) => {
+    const previous = get().privacyGuardModel;
+    set({ privacyGuardModel: model });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync privacyGuardModel setting to server - reverting');
+      set({ privacyGuardModel: previous });
+    }
+  },
+  setPrivacyGuardOllamaUrl: async (url) => {
+    const previous = get().privacyGuardOllamaUrl;
+    set({ privacyGuardOllamaUrl: url });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync privacyGuardOllamaUrl setting to server - reverting');
+      set({ privacyGuardOllamaUrl: previous });
+    }
+  },
+  setLlmMode: async (mode) => {
+    const previous = get().llmMode;
+    set({ llmMode: mode });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync llmMode setting to server - reverting');
+      set({ llmMode: previous });
+    }
+  },
+  setLocalPhaseModel: async (phase, model) => {
+    const previous = { ...get().localPhaseModels };
+    const updated = { ...previous, [phase]: model };
+    set({ localPhaseModels: updated });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync localPhaseModels setting to server - reverting');
+      set({ localPhaseModels: previous });
+    }
+  },
+  setMixedModeConfig: async (key, value) => {
+    const previous = { ...get().mixedModeConfig };
+    const updated = { ...previous, [key]: value };
+    set({ mixedModeConfig: updated });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync mixedModeConfig setting to server - reverting');
+      set({ mixedModeConfig: previous });
+    }
+  },
+  setOllamaUrl: async (url) => {
+    const previous = get().ollamaUrl;
+    set({ ollamaUrl: url });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync ollamaUrl setting to server - reverting');
+      set({ ollamaUrl: previous });
+    }
+  },
+  setVdbUrl: async (url) => {
+    const previous = get().vdbUrl;
+    set({ vdbUrl: url });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync vdbUrl setting to server - reverting');
+      set({ vdbUrl: previous });
+    }
+  },
+  setVdbCollection: async (collection) => {
+    const previous = get().vdbCollection;
+    set({ vdbCollection: collection });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync vdbCollection setting to server - reverting');
+      set({ vdbCollection: previous });
+    }
+  },
+
+  // MEGABRAIN Integration actions
+  setMegabrainEnabled: async (enabled) => {
+    const previous = get().megabrainEnabled;
+    set({ megabrainEnabled: enabled });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync megabrainEnabled setting to server - reverting');
+      set({ megabrainEnabled: previous });
+    }
+  },
+  setMegabrainApiUrl: async (url) => {
+    const previous = get().megabrainApiUrl;
+    set({ megabrainApiUrl: url });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync megabrainApiUrl setting to server - reverting');
+      set({ megabrainApiUrl: previous });
+    }
+  },
+  setMegabrainWsUrl: async (url) => {
+    const previous = get().megabrainWsUrl;
+    set({ megabrainWsUrl: url });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync megabrainWsUrl setting to server - reverting');
+      set({ megabrainWsUrl: previous });
+    }
+  },
+  setMegabrainRagEnabled: async (enabled) => {
+    const previous = get().megabrainRagEnabled;
+    set({ megabrainRagEnabled: enabled });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync megabrainRagEnabled setting to server - reverting');
+      set({ megabrainRagEnabled: previous });
+    }
+  },
+  setSelectedEnhancementMode: (mode) => {
+    set({ selectedEnhancementMode: mode });
+  },
+  setMegabrainSkillsEnabled: async (enabled) => {
+    const previous = get().megabrainSkillsEnabled;
+    set({ megabrainSkillsEnabled: enabled });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync megabrainSkillsEnabled setting to server - reverting');
+      set({ megabrainSkillsEnabled: previous });
+    }
+  },
+  setMegabrainAdvocatusEnabled: async (enabled) => {
+    const previous = get().megabrainAdvocatusEnabled;
+    set({ megabrainAdvocatusEnabled: enabled });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync megabrainAdvocatusEnabled setting to server - reverting');
+      set({ megabrainAdvocatusEnabled: previous });
+    }
+  },
+  setMegabrainExpertsEnabled: async (enabled) => {
+    const previous = get().megabrainExpertsEnabled;
+    set({ megabrainExpertsEnabled: enabled });
+    const { syncSettingsToServer } = await import('@/hooks/use-settings-migration');
+    const ok = await syncSettingsToServer();
+    if (!ok) {
+      logger.error('Failed to sync megabrainExpertsEnabled setting to server - reverting');
+      set({ megabrainExpertsEnabled: previous });
     }
   },
 
@@ -3369,7 +3630,8 @@ export const useAppStore = create<AppState & AppActions>()((set, get) => ({
 
   clearInitScriptState: (projectPath, branch) => {
     const key = `${projectPath}::${branch}`;
-    const { [key]: _, ...rest } = get().initScriptState;
+    const { [key]: _removed, ...rest } = get().initScriptState;
+    void _removed; // Suppress unused variable warning
     set({ initScriptState: rest });
   },
 

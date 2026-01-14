@@ -34,7 +34,7 @@ export function DeleteConfirmDialog({
   title,
   description,
   children,
-  confirmText = 'Delete',
+  confirmText = 'Löschen',
   testId = 'delete-confirm-dialog',
   confirmTestId = 'confirm-delete-button',
 }: DeleteConfirmDialogProps) {
@@ -63,7 +63,7 @@ export function DeleteConfirmDialog({
             className="px-4"
             data-testid="cancel-delete-button"
           >
-            Cancel
+            Abbrechen
           </Button>
           <HotkeyButton
             variant="destructive"

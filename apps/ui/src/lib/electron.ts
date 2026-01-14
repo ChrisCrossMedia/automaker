@@ -119,7 +119,7 @@ export interface IdeationAPI {
     projectPath: string,
     ideaId: string,
     options?: ConvertToFeatureOptions
-  ) => Promise<{ success: boolean; feature?: any; featureId?: string; error?: string }>;
+  ) => Promise<{ success: boolean; feature?: Feature; featureId?: string; error?: string }>;
 
   // Add suggestion directly to board as feature
   addSuggestionToBoard: (
@@ -136,8 +136,8 @@ export interface IdeationAPI {
   }>;
 
   // Event subscriptions
-  onStream: (callback: (event: any) => void) => () => void;
-  onAnalysisEvent: (callback: (event: any) => void) => () => void;
+  onStream: (callback: (event: unknown) => void) => () => void;
+  onAnalysisEvent: (callback: (event: unknown) => void) => () => void;
 }
 
 export interface FileEntry {
@@ -658,7 +658,7 @@ export interface ElectronAPI {
   };
   // Setup API surface is implemented by the main process and mirrored by HttpApiClient.
   // Keep this intentionally loose to avoid tight coupling between front-end and server types.
-  setup?: any;
+  setup?: SetupAPI;
   agent?: {
     start: (
       sessionId: string,
@@ -673,7 +673,11 @@ export interface ElectronAPI {
       message: string,
       workingDirectory?: string,
       imagePaths?: string[],
-      model?: string
+      model?: string,
+      thinkingLevel?: string,
+      privacyGuardEnabled?: boolean,
+      expertsEnabled?: boolean,
+      ragEnabled?: boolean
     ) => Promise<{ success: boolean; error?: string }>;
     getHistory: (sessionId: string) => Promise<{
       success: boolean;
@@ -857,7 +861,7 @@ export const isElectron = (): boolean => {
     return false;
   }
 
-  const w = window as any;
+  const w = window as { isElectron?: boolean; electronAPI?: { isElectron?: boolean } };
 
   if (w.isElectron === true) {
     return true;
@@ -937,14 +941,16 @@ export const getCurrentApiMode = (): 'http' => {
 
 // Debug helpers
 if (typeof window !== 'undefined') {
-  (window as any).__checkApiMode = () => {
+  (window as unknown as { __checkApiMode: () => void }).__checkApiMode = () => {
     console.log('Current API mode:', getCurrentApiMode());
     console.log('isElectron():', isElectron());
   };
 }
 
 // Mock API for development/fallback when no backend is available
-const getMockElectronAPI = (): ElectronAPI => {
+// Currently unused but kept for potential future development/testing
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _getMockElectronAPI = (): ElectronAPI => {
   return {
     ping: async () => 'pong (mock)',
 
@@ -1321,8 +1327,8 @@ interface SetupAPI {
     user: string | null;
     error?: string;
   }>;
-  onInstallProgress?: (callback: (progress: any) => void) => () => void;
-  onAuthProgress?: (callback: (progress: any) => void) => () => void;
+  onInstallProgress?: (callback: (progress: unknown) => void) => () => void;
+  onAuthProgress?: (callback: (progress: unknown) => void) => () => void;
 }
 
 // Mock Setup API implementation
@@ -1365,7 +1371,7 @@ function createMockSetupAPI(): SetupAPI {
       };
     },
 
-    storeApiKey: async (provider: string, apiKey: string) => {
+    storeApiKey: async (provider: string, _apiKey: string) => {
       console.log('[Mock] Storing API key for:', provider);
       // In mock mode, we just pretend to store it (it's already in the app store)
       return { success: true };
@@ -1419,12 +1425,12 @@ function createMockSetupAPI(): SetupAPI {
       };
     },
 
-    onInstallProgress: (callback) => {
+    onInstallProgress: (_callback) => {
       // Mock progress events
       return () => {};
     },
 
-    onAuthProgress: (callback) => {
+    onAuthProgress: (_callback) => {
       // Mock auth events
       return () => {};
     },
@@ -1549,7 +1555,10 @@ function createMockWorktreeAPI(): WorktreeAPI {
       };
     },
 
-    createPR: async (worktreePath: string, options?: any) => {
+    createPR: async (
+      worktreePath: string,
+      options?: { title?: string; body?: string; base?: string }
+    ) => {
       console.log('[Mock] Creating PR:', { worktreePath, options });
       return {
         success: true,
@@ -1804,7 +1813,7 @@ function createMockWorktreeAPI(): WorktreeAPI {
       };
     },
 
-    onInitScriptEvent: (callback) => {
+    onInitScriptEvent: (_callback) => {
       console.log('[Mock] Subscribing to init script events');
       // Return unsubscribe function
       return () => {
@@ -1947,7 +1956,7 @@ function createMockAutoModeAPI(): AutoModeAPI {
       return { success: true, passes: true };
     },
 
-    resumeFeature: async (projectPath: string, featureId: string, useWorktrees?: boolean) => {
+    resumeFeature: async (projectPath: string, featureId: string, _useWorktrees?: boolean) => {
       if (mockRunningFeatures.has(featureId)) {
         return {
           success: false,
@@ -2083,7 +2092,7 @@ function createMockAutoModeAPI(): AutoModeAPI {
       featureId: string,
       prompt: string,
       imagePaths?: string[],
-      worktreePath?: string
+      _worktreePath?: string
     ) => {
       if (mockRunningFeatures.has(featureId)) {
         return {
@@ -2634,7 +2643,7 @@ function emitSpecRegenerationEvent(event: SpecRegenerationEvent) {
 async function simulateSpecCreation(
   projectPath: string,
   projectOverview: string,
-  generateFeatures = true
+  _generateFeatures = true
 ) {
   mockSpecRegenerationPhase = 'initialization';
   emitSpecRegenerationEvent({
@@ -2857,7 +2866,7 @@ function createMockFeaturesAPI(): FeaturesAPI {
       console.log('[Mock] Getting all features for:', projectPath);
 
       // Check if test has set mock features via global variable
-      const testFeatures = (window as any).__mockFeatures;
+      const testFeatures = (window as unknown as { __mockFeatures?: Feature[] }).__mockFeatures;
       if (testFeatures !== undefined) {
         return { success: true, features: testFeatures };
       }

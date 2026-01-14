@@ -26,7 +26,7 @@ export function AudioSection({ muteDoneSound, onMuteDoneSoundChange }: AudioSect
           <h2 className="text-lg font-semibold text-foreground tracking-tight">Audio</h2>
         </div>
         <p className="text-sm text-muted-foreground/80 ml-12">
-          Configure audio and notification settings.
+          Audio- und Benachrichtigungseinstellungen konfigurieren.
         </p>
       </div>
       <div className="p-6 space-y-4">
@@ -44,12 +44,12 @@ export function AudioSection({ muteDoneSound, onMuteDoneSoundChange }: AudioSect
               className="text-foreground cursor-pointer font-medium flex items-center gap-2"
             >
               <VolumeX className="w-4 h-4 text-brand-500" />
-              Mute notification sound when agents complete
+              Benachrichtigungston stummschalten wenn Agenten fertig sind
             </Label>
             <p className="text-xs text-muted-foreground/80 leading-relaxed">
-              When enabled, disables the &quot;ding&quot; sound that plays when an agent completes a
-              feature. The feature will still move to the completed column, but without audio
-              notification.
+              Wenn aktiviert, wird der &quot;Ding&quot;-Ton deaktiviert, der abgespielt wird, wenn
+              ein Agent ein Feature abschließt. Das Feature wird weiterhin in die
+              Abgeschlossen-Spalte verschoben, aber ohne Audio-Benachrichtigung.
             </p>
           </div>
         </div>

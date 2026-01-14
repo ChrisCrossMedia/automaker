@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createLogger } from '@automaker/utils/logger';
 import {
   Terminal as TerminalIcon,
@@ -48,7 +48,7 @@ import {
   defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
-import { apiFetch, apiGet, apiPost, apiDeleteRaw, getAuthHeaders } from '@/lib/api-fetch';
+import { apiFetch, apiGet, apiPost, apiDeleteRaw } from '@/lib/api-fetch';
 import { getApiKey } from '@/lib/http-api-client';
 
 const logger = createLogger('Terminal');
@@ -223,7 +223,6 @@ export function TerminalView() {
     reorderTerminalTabs,
     moveTerminalToTab,
     setTerminalPanelFontSize,
-    setTerminalTabLayout,
     toggleTerminalMaximized,
     saveTerminalLayout,
     getPersistedTerminalLayout,

@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import js from '@eslint/js';
 import ts from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
+import globals from 'globals';
 
 const eslintConfig = defineConfig([
   js.configs.recommended,
@@ -9,11 +10,7 @@ const eslintConfig = defineConfig([
     files: ['**/*.mjs', '**/*.cjs'],
     languageOptions: {
       globals: {
-        console: 'readonly',
-        process: 'readonly',
-        require: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
+        ...globals.node,
       },
     },
   },
@@ -26,68 +23,23 @@ const eslintConfig = defineConfig([
         sourceType: 'module',
       },
       globals: {
-        // Browser/DOM APIs
-        window: 'readonly',
-        document: 'readonly',
-        navigator: 'readonly',
-        Navigator: 'readonly',
-        localStorage: 'readonly',
-        sessionStorage: 'readonly',
-        fetch: 'readonly',
-        WebSocket: 'readonly',
-        File: 'readonly',
-        FileList: 'readonly',
-        FileReader: 'readonly',
-        Blob: 'readonly',
-        atob: 'readonly',
-        crypto: 'readonly',
-        prompt: 'readonly',
-        confirm: 'readonly',
-        getComputedStyle: 'readonly',
-        requestAnimationFrame: 'readonly',
-        // DOM Element Types
-        HTMLElement: 'readonly',
-        HTMLInputElement: 'readonly',
-        HTMLDivElement: 'readonly',
-        HTMLButtonElement: 'readonly',
-        HTMLSpanElement: 'readonly',
-        HTMLTextAreaElement: 'readonly',
-        HTMLHeadingElement: 'readonly',
-        HTMLParagraphElement: 'readonly',
-        HTMLImageElement: 'readonly',
-        Element: 'readonly',
-        // Event Types
-        Event: 'readonly',
-        KeyboardEvent: 'readonly',
-        DragEvent: 'readonly',
-        PointerEvent: 'readonly',
-        CustomEvent: 'readonly',
-        ClipboardEvent: 'readonly',
-        WheelEvent: 'readonly',
-        DataTransfer: 'readonly',
-        // Web APIs
-        ResizeObserver: 'readonly',
-        AbortSignal: 'readonly',
-        Audio: 'readonly',
-        ScrollBehavior: 'readonly',
-        // Timers
-        setTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearTimeout: 'readonly',
-        clearInterval: 'readonly',
-        // Node.js (for scripts and Electron)
-        process: 'readonly',
-        require: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        NodeJS: 'readonly',
+        ...globals.browser,
+        ...globals.node,
         // React
         React: 'readonly',
         JSX: 'readonly',
         // Electron
         Electron: 'readonly',
-        // Console
-        console: 'readonly',
+        // Vite Define
+        __APP_VERSION__: 'readonly',
+        // TypeScript/Node.js Types
+        NodeJS: 'readonly',
+        ScrollBehavior: 'readonly',
+        // Fetch API Types
+        RequestCache: 'readonly',
+        RequestInit: 'readonly',
+        // TypeScript Types (for @ts-nocheck files)
+        AgentModel: 'readonly',
       },
     },
     plugins: {
@@ -97,6 +49,9 @@ const eslintConfig = defineConfig([
       ...ts.configs.recommended.rules,
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/ban-ts-comment': ['warn', { 'ts-nocheck': 'allow-with-description' }],
+      '@typescript-eslint/no-require-imports': 'warn',
+      'no-control-regex': 'off',
     },
   },
   globalIgnores([

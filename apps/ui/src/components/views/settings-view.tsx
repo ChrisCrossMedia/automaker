@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { useSetupStore } from '@/store/setup-store';
 
 import { useSettingsView, type SettingsViewId } from './settings-view/hooks';
 import { NAV_ITEMS } from './settings-view/config/navigation';
@@ -9,16 +8,16 @@ import { KeyboardMapDialog } from './settings-view/components/keyboard-map-dialo
 import { DeleteProjectDialog } from './settings-view/components/delete-project-dialog';
 import { SettingsNavigation } from './settings-view/components/settings-navigation';
 import { ApiKeysSection } from './settings-view/api-keys/api-keys-section';
-import { ModelDefaultsSection } from './settings-view/model-defaults';
 import { AppearanceSection } from './settings-view/appearance/appearance-section';
 import { TerminalSection } from './settings-view/terminal/terminal-section';
 import { AudioSection } from './settings-view/audio/audio-section';
 import { KeyboardShortcutsSection } from './settings-view/keyboard-shortcuts/keyboard-shortcuts-section';
-import { FeatureDefaultsSection } from './settings-view/feature-defaults/feature-defaults-section';
 import { WorktreesSection } from './settings-view/worktrees';
 import { DangerZoneSection } from './settings-view/danger-zone/danger-zone-section';
 import { AccountSection } from './settings-view/account';
 import { SecuritySection } from './settings-view/security';
+import { LlmModeSection } from './settings-view/llm-mode';
+import { MegabrainSection } from './settings-view/megabrain';
 import {
   ClaudeSettingsTab,
   CursorSettingsTab,
@@ -35,24 +34,12 @@ export function SettingsView() {
     theme,
     setTheme,
     setProjectTheme,
-    defaultSkipTests,
-    setDefaultSkipTests,
-    enableDependencyBlocking,
-    setEnableDependencyBlocking,
-    skipVerificationInAutoMode,
-    setSkipVerificationInAutoMode,
     useWorktrees,
     setUseWorktrees,
     muteDoneSound,
     setMuteDoneSound,
     currentProject,
     moveProjectToTrash,
-    defaultPlanningMode,
-    setDefaultPlanningMode,
-    defaultRequirePlanApproval,
-    setDefaultRequirePlanApproval,
-    autoLoadClaudeMd,
-    setAutoLoadClaudeMd,
     promptCustomization,
     setPromptCustomization,
     skipSandboxWarning,
@@ -124,8 +111,8 @@ export function SettingsView() {
             onPromptCustomizationChange={setPromptCustomization}
           />
         );
-      case 'model-defaults':
-        return <ModelDefaultsSection />;
+      case 'llm-mode':
+        return <LlmModeSection />;
       case 'appearance':
         return (
           <AppearanceSection
@@ -144,21 +131,6 @@ export function SettingsView() {
         return (
           <AudioSection muteDoneSound={muteDoneSound} onMuteDoneSoundChange={setMuteDoneSound} />
         );
-      case 'defaults':
-        return (
-          <FeatureDefaultsSection
-            defaultSkipTests={defaultSkipTests}
-            enableDependencyBlocking={enableDependencyBlocking}
-            skipVerificationInAutoMode={skipVerificationInAutoMode}
-            defaultPlanningMode={defaultPlanningMode}
-            defaultRequirePlanApproval={defaultRequirePlanApproval}
-            onDefaultSkipTestsChange={setDefaultSkipTests}
-            onEnableDependencyBlockingChange={setEnableDependencyBlocking}
-            onSkipVerificationInAutoModeChange={setSkipVerificationInAutoMode}
-            onDefaultPlanningModeChange={setDefaultPlanningMode}
-            onDefaultRequirePlanApprovalChange={setDefaultRequirePlanApproval}
-          />
-        );
       case 'worktrees':
         return (
           <WorktreesSection useWorktrees={useWorktrees} onUseWorktreesChange={setUseWorktrees} />
@@ -172,6 +144,8 @@ export function SettingsView() {
             onSkipSandboxWarningChange={setSkipSandboxWarning}
           />
         );
+      case 'megabrain':
+        return <MegabrainSection />;
       case 'danger':
         return (
           <DangerZoneSection

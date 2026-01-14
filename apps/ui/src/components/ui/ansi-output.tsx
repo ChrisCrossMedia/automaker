@@ -65,7 +65,6 @@ interface TextSegment {
  */
 function stripHyperlinks(text: string): string {
   // Remove OSC 8 hyperlink sequences
-  // eslint-disable-next-line no-control-regex
   return text.replace(/\x1b\]8;;[^\x07\x1b]*(?:\x07|\x1b\\)/g, '');
 }
 
@@ -74,7 +73,6 @@ function stripHyperlinks(text: string): string {
  */
 function stripOtherOSC(text: string): string {
   // Remove OSC sequences (ESC ] ... BEL or ESC ] ... ST)
-  // eslint-disable-next-line no-control-regex
   return text.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '');
 }
 
@@ -88,7 +86,6 @@ function parseAnsi(text: string): TextSegment[] {
   // Match ANSI escape sequences: ESC[...m (SGR - Select Graphic Rendition)
   // Also handle ESC[K (erase line) and other CSI sequences by stripping them
   // The ESC character can be \x1b, \033, \u001b
-  // eslint-disable-next-line no-control-regex
   const ansiRegex = /\x1b\[([0-9;]*)([a-zA-Z])/g;
 
   let currentStyle: TextSegment['style'] = {};

@@ -1,74 +1,76 @@
 /**
- * "Simplify" Enhancement Mode
- * Makes verbose descriptions concise and focused.
+ * "Vereinfachen" Enhancement Mode
+ * Macht ausführliche Beschreibungen prägnant und fokussiert.
  */
 
 import type { EnhancementExample } from '@automaker/types';
 
 /**
- * System prompt for the "simplify" enhancement mode.
- * Makes verbose descriptions concise and focused.
+ * System-Prompt für den "vereinfachen" Enhancement-Modus.
+ * Macht ausführliche Beschreibungen prägnant und fokussiert.
  */
-export const SIMPLIFY_SYSTEM_PROMPT = `You are an expert editor who excels at making verbose text concise without losing meaning.
+export const SIMPLIFY_SYSTEM_PROMPT = `Du bist ein Experten-Redakteur, der sich darauf spezialisiert hat, ausführliche Texte prägnant zu machen ohne Bedeutung zu verlieren.
 
-Your task is to simplify a task description while preserving essential information:
+WICHTIG: Antworte IMMER auf Deutsch!
 
-1. IDENTIFY the core message:
-   - Extract the primary goal or requirement
-   - Note truly essential details
-   - Separate nice-to-have from must-have information
+Deine Aufgabe ist es, eine Aufgabenbeschreibung zu vereinfachen und dabei wesentliche Informationen zu bewahren:
 
-2. ELIMINATE redundancy:
-   - Remove repeated information
-   - Cut unnecessary qualifiers and hedging language
-   - Remove filler words and phrases
+1. IDENTIFIZIERE die Kernbotschaft:
+   - Extrahiere das primäre Ziel oder die Anforderung
+   - Notiere wirklich wesentliche Details
+   - Trenne "Wäre schön" von "Muss sein" Informationen
 
-3. CONSOLIDATE related points:
-   - Merge overlapping requirements
-   - Group related items together
-   - Use concise language
+2. ELIMINIERE Redundanz:
+   - Entferne wiederholte Informationen
+   - Streiche unnötige Qualifizierer und vage Formulierungen
+   - Entferne Füllwörter und -phrasen
 
-4. PRESERVE critical details:
-   - Keep specific technical requirements
-   - Retain important constraints
-   - Maintain actionable specifics
+3. KONSOLIDIERE verwandte Punkte:
+   - Führe überlappende Anforderungen zusammen
+   - Gruppiere verwandte Elemente
+   - Verwende prägnante Sprache
 
-Output ONLY the simplified description. Aim for 30-50% reduction in length while keeping all essential information. Do not explain your changes.`;
+4. BEWAHRE kritische Details:
+   - Behalte spezifische technische Anforderungen
+   - Bewahre wichtige Einschränkungen
+   - Erhalte umsetzbare Spezifika
+
+Gib NUR die vereinfachte Beschreibung aus. Strebe eine 30-50% Reduktion der Länge an, während alle wesentlichen Informationen erhalten bleiben. Erkläre deine Änderungen nicht.`;
 
 /**
- * Few-shot examples for the "simplify" enhancement mode
+ * Beispiele für den "vereinfachen" Enhancement-Modus
  */
 export const SIMPLIFY_EXAMPLES: EnhancementExample[] = [
   {
-    input: `We need to implement a feature that would allow our users to be able to export their data in various different formats. The formats we are thinking about supporting include CSV which is commonly used for spreadsheet applications, and also JSON which is good for developers, and possibly PDF for people who want a printable version. The user should be able to go somewhere in the UI and select which format they want and then download their data in that format. We should probably also show some kind of progress indicator while the export is happening since it might take a while for large datasets.`,
-    output: `Add Data Export Feature
+    input: `Wir müssen ein Feature implementieren, das unseren Benutzern ermöglicht, ihre Daten in verschiedenen unterschiedlichen Formaten zu exportieren. Die Formate, die wir in Betracht ziehen zu unterstützen, umfassen CSV, das häufig für Tabellenkalkulations-Anwendungen verwendet wird, und auch JSON, das gut für Entwickler ist, und möglicherweise PDF für Leute, die eine druckbare Version wollen. Der Benutzer sollte irgendwo in der UI ein Format auswählen können und dann seine Daten in diesem Format herunterladen. Wir sollten wahrscheinlich auch eine Art Fortschrittsanzeige zeigen, während der Export läuft, da es bei großen Datensätzen eine Weile dauern könnte.`,
+    output: `Datenexport-Feature hinzufügen
 
-Allow users to export their data in CSV, JSON, or PDF format.
+Ermögliche Benutzern, ihre Daten im CSV-, JSON- oder PDF-Format zu exportieren.
 
-Requirements:
-- Add export button/menu in the UI
-- Support three formats: CSV (spreadsheets), JSON (developers), PDF (printing)
-- Show progress indicator during export
-- Handle large datasets gracefully`,
+Anforderungen:
+- Füge Export-Button/Menü in der UI hinzu
+- Unterstütze drei Formate: CSV (Tabellen), JSON (Entwickler), PDF (Drucken)
+- Zeige Fortschrittsanzeige während Export
+- Behandle große Datensätze elegant`,
   },
   {
-    input: `The current notification system is not working very well and users are complaining about it. Sometimes they don't receive notifications at all, and other times they receive too many notifications and feel overwhelmed. We also have had reports that the notifications are not appearing correctly on mobile devices. Additionally, some users have requested the ability to customize which types of notifications they receive. We should look into all of these issues and make the notification system work better overall.`,
-    output: `Fix and Improve Notification System
+    input: `Das aktuelle Benachrichtigungssystem funktioniert nicht sehr gut und Benutzer beschweren sich darüber. Manchmal erhalten sie überhaupt keine Benachrichtigungen, und manchmal erhalten sie zu viele Benachrichtigungen und fühlen sich überwältigt. Wir haben auch Berichte erhalten, dass die Benachrichtigungen auf mobilen Geräten nicht korrekt angezeigt werden. Zusätzlich haben einige Benutzer die Möglichkeit angefordert, anzupassen welche Arten von Benachrichtigungen sie erhalten. Wir sollten uns all diese Probleme ansehen und das Benachrichtigungssystem insgesamt besser machen.`,
+    output: `Benachrichtigungssystem reparieren und verbessern
 
-Address reliability issues and add user controls for notifications.
+Behebe Zuverlässigkeitsprobleme und füge Benutzerkontrollen für Benachrichtigungen hinzu.
 
-Issues to fix:
-- Missing notifications (delivery reliability)
-- Notification overload (implement batching/digest)
-- Mobile display problems
+Zu behebende Probleme:
+- Fehlende Benachrichtigungen (Zustellzuverlässigkeit)
+- Benachrichtigungsüberflutung (implementiere Bündelung/Zusammenfassung)
+- Mobile Anzeigeprobleme
 
-Enhancements:
-- Add notification preferences (per-type controls)
-- Test across devices and platforms`,
+Erweiterungen:
+- Füge Benachrichtigungspräferenzen hinzu (Kontrollen pro Typ)
+- Teste auf verschiedenen Geräten und Plattformen`,
   },
 ];
 
 /**
- * Description of what this enhancement mode does
+ * Beschreibung dessen, was dieser Enhancement-Modus macht
  */
-export const SIMPLIFY_DESCRIPTION = 'Make verbose descriptions concise and focused';
+export const SIMPLIFY_DESCRIPTION = 'Mache ausführliche Beschreibungen prägnant und fokussiert';

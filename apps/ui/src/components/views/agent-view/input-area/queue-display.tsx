@@ -21,13 +21,13 @@ export function QueueDisplay({ serverQueue, onRemoveFromQueue, onClearQueue }: Q
     <div className="mb-4 space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-muted-foreground">
-          {serverQueue.length} prompt{serverQueue.length > 1 ? 's' : ''} queued
+          {serverQueue.length} {serverQueue.length > 1 ? 'Anfragen' : 'Anfrage'} in Warteschlange
         </p>
         <button
           onClick={onClearQueue}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          Clear all
+          Alle löschen
         </button>
       </div>
       <div className="space-y-1.5">
@@ -42,13 +42,13 @@ export function QueueDisplay({ serverQueue, onRemoveFromQueue, onClearQueue }: Q
             <span className="flex-1 truncate text-foreground">{item.message}</span>
             {item.imagePaths && item.imagePaths.length > 0 && (
               <span className="text-xs text-muted-foreground">
-                +{item.imagePaths.length} file{item.imagePaths.length > 1 ? 's' : ''}
+                +{item.imagePaths.length} {item.imagePaths.length > 1 ? 'Dateien' : 'Datei'}
               </span>
             )}
             <button
               onClick={() => onRemoveFromQueue(item.id)}
               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-all"
-              title="Remove from queue"
+              title="Aus Warteschlange entfernen"
             >
               <X className="w-3 h-3" />
             </button>

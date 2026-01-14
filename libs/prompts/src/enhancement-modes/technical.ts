@@ -1,92 +1,95 @@
 /**
- * "Technical" Enhancement Mode
- * Adds implementation details and technical specifications.
+ * "Technisch" Enhancement Mode
+ * Fügt Implementierungsdetails und technische Spezifikationen hinzu.
  */
 
 import type { EnhancementExample } from '@automaker/types';
 
 /**
- * System prompt for the "technical" enhancement mode.
- * Adds implementation details and technical specifications.
+ * System-Prompt für den "technisch" Enhancement-Modus.
+ * Fügt Implementierungsdetails und technische Spezifikationen hinzu.
  */
-export const TECHNICAL_SYSTEM_PROMPT = `You are a senior software engineer skilled at adding technical depth to feature descriptions.
+export const TECHNICAL_SYSTEM_PROMPT = `Du bist ein Senior Software-Ingenieur, der sich darauf spezialisiert hat, Feature-Beschreibungen mit technischer Tiefe anzureichern.
 
-Your task is to enhance a task description with technical implementation details:
+WICHTIG: Antworte IMMER auf Deutsch!
 
-1. ANALYZE the requirement:
-   - Understand the functional goal
-   - Identify the technical domain (frontend, backend, database, etc.)
-   - Consider the likely tech stack based on context
+Deine Aufgabe ist es, eine Aufgabenbeschreibung mit technischen Implementierungsdetails zu erweitern:
 
-2. ADD technical specifications:
-   - Suggest specific technologies, libraries, or patterns
-   - Define API contracts or data structures if relevant
-   - Note performance considerations
-   - Identify security implications
+1. ANALYSIERE die Anforderung:
+   - Verstehe das funktionale Ziel
+   - Identifiziere die technische Domäne (Frontend, Backend, Datenbank, etc.)
+   - Berücksichtige den wahrscheinlichen Tech-Stack basierend auf dem Kontext
 
-3. OUTLINE implementation approach:
-   - Break down into technical sub-tasks
-   - Suggest file structure or component organization
-   - Note integration points with existing systems
+2. FÜGE technische Spezifikationen HINZU:
+   - Schlage spezifische Technologien, Bibliotheken oder Muster vor
+   - Definiere API-Verträge oder Datenstrukturen, falls relevant
+   - Notiere Performance-Überlegungen
+   - Identifiziere Sicherheitsimplikationen
 
-4. CONSIDER edge cases:
-   - Error handling requirements
-   - Loading and empty states
-   - Boundary conditions
+3. SKIZZIERE den Implementierungsansatz:
+   - Unterteile in technische Unteraufgaben
+   - Schlage Dateistruktur oder Komponenten-Organisation vor
+   - Notiere Integrationspunkte mit bestehenden Systemen
 
-Output ONLY the enhanced technical description. Keep it concise but comprehensive. Do not include explanations about your reasoning.`;
+4. BERÜCKSICHTIGE Grenzfälle:
+   - Anforderungen an Fehlerbehandlung
+   - Lade- und Leerzustände
+   - Randbedingungen
+
+Gib NUR die erweiterte technische Beschreibung aus. Halte sie prägnant aber umfassend. Füge keine Erklärungen zu deiner Begründung hinzu.`;
 
 /**
- * Few-shot examples for the "technical" enhancement mode
+ * Beispiele für den "technisch" Enhancement-Modus
  */
 export const TECHNICAL_EXAMPLES: EnhancementExample[] = [
   {
-    input: 'Add user profile page',
-    output: `Add User Profile Page
+    input: 'Benutzerprofilseite hinzufügen',
+    output: `Benutzerprofilseite hinzufügen
 
-Create a dedicated profile page for viewing and editing user information.
+Erstelle eine dedizierte Profilseite zum Anzeigen und Bearbeiten von Benutzerinformationen.
 
-Technical Implementation:
-- Frontend: React component at /profile route with form validation
-- API Endpoint: GET/PUT /api/users/:id for fetching and updating profile
-- Data Model: Extend User schema with profile fields (avatar, bio, preferences)
-- File Upload: Integrate cloud storage for avatar images with client-side resizing
-- State Management: Use optimistic updates for better UX
-- Validation: Server-side validation matching client-side rules
+Technische Implementierung:
+- Frontend: React-Komponente unter /profile Route mit Formularvalidierung
+- API-Endpoint: GET/PUT /api/users/:id zum Abrufen und Aktualisieren des Profils
+- Datenmodell: Erweitere User-Schema mit Profilfeldern (Avatar, Bio, Präferenzen)
+- Datei-Upload: Integriere Cloud-Storage für Avatar-Bilder mit clientseitiger Größenanpassung
+- State-Management: Verwende optimistische Updates für bessere UX
+- Validierung: Serverseitige Validierung passend zu clientseitigen Regeln
 
-Components:
-- ProfileHeader (avatar, name, edit button)
-- ProfileForm (editable fields with validation)
-- AvatarUploader (drag-drop with preview)
+Komponenten:
+- ProfileHeader (Avatar, Name, Bearbeiten-Button)
+- ProfileForm (bearbeitbare Felder mit Validierung)
+- AvatarUploader (Drag-Drop mit Vorschau)
 
-Security: Ensure users can only edit their own profile (auth middleware)`,
+Sicherheit: Stelle sicher, dass Benutzer nur ihr eigenes Profil bearbeiten können (Auth-Middleware)`,
   },
   {
-    input: 'Add search functionality',
-    output: `Add Search Functionality
+    input: 'Suchfunktion hinzufügen',
+    output: `Suchfunktion hinzufügen
 
-Implement full-text search across application content.
+Implementiere Volltextsuche über Anwendungsinhalte.
 
-Technical Implementation:
-- Search Engine: Use Elasticsearch or PostgreSQL full-text search
+Technische Implementierung:
+- Such-Engine: Verwende Elasticsearch oder PostgreSQL Volltextsuche
 - API: GET /api/search?q={query}&type={type}&page={page}
-- Indexing: Create search index with relevant fields, update on content changes
-- Frontend: Debounced search input (300ms) with typeahead suggestions
-- Results: Paginated results with highlighted matching text
+- Indexierung: Erstelle Suchindex mit relevanten Feldern, aktualisiere bei Inhaltsänderungen
+- Frontend: Debounced Sucheingabe (300ms) mit Typeahead-Vorschlägen
+- Ergebnisse: Paginierte Ergebnisse mit hervorgehobenem übereinstimmendem Text
 
-Architecture:
-- SearchService class handling query building and execution
-- SearchIndex worker for background indexing
-- SearchResults component with filtering and sorting
+Architektur:
+- SearchService-Klasse für Query-Erstellung und -Ausführung
+- SearchIndex-Worker für Hintergrund-Indexierung
+- SearchResults-Komponente mit Filterung und Sortierung
 
 Performance:
-- Implement search result caching (Redis, 5-minute TTL)
-- Limit results per page (20 items)
-- Add query complexity limits to prevent abuse`,
+- Implementiere Suchergebnis-Caching (Redis, 5-Minuten TTL)
+- Begrenze Ergebnisse pro Seite (20 Einträge)
+- Füge Query-Komplexitätsgrenzen hinzu um Missbrauch zu verhindern`,
   },
 ];
 
 /**
- * Description of what this enhancement mode does
+ * Beschreibung dessen, was dieser Enhancement-Modus macht
  */
-export const TECHNICAL_DESCRIPTION = 'Add implementation details and technical specifications';
+export const TECHNICAL_DESCRIPTION =
+  'Füge Implementierungsdetails und technische Spezifikationen hinzu';

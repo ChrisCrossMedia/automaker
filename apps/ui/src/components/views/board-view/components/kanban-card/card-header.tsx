@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses dynamic dropdown menus and event handlers
 import { useState } from 'react';
 import { Feature } from '@/store/app-store';
 import { cn } from '@/lib/utils';

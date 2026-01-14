@@ -14,9 +14,9 @@ interface ErrorStateProps {
 
 export function ErrorState({
   error,
-  title = 'Failed to Load',
+  title = 'Laden fehlgeschlagen',
   onRetry,
-  retryText = 'Try Again',
+  retryText = 'Erneut versuchen',
 }: ErrorStateProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-6">

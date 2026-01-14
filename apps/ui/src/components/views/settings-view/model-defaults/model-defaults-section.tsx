@@ -15,62 +15,62 @@ interface PhaseConfig {
 const QUICK_TASKS: PhaseConfig[] = [
   {
     key: 'enhancementModel',
-    label: 'Feature Enhancement',
-    description: 'Improves feature names and descriptions',
+    label: 'Feature-Verbesserung',
+    description: 'Verbessert Feature-Namen und -Beschreibungen',
   },
   {
     key: 'fileDescriptionModel',
-    label: 'File Descriptions',
-    description: 'Generates descriptions for context files',
+    label: 'Dateibeschreibungen',
+    description: 'Generiert Beschreibungen für Kontextdateien',
   },
   {
     key: 'imageDescriptionModel',
-    label: 'Image Descriptions',
-    description: 'Analyzes and describes context images',
+    label: 'Bildbeschreibungen',
+    description: 'Analysiert und beschreibt Kontextbilder',
   },
 ];
 
 const VALIDATION_TASKS: PhaseConfig[] = [
   {
     key: 'validationModel',
-    label: 'GitHub Issue Validation',
-    description: 'Validates and improves GitHub issues',
+    label: 'GitHub Issue Validierung',
+    description: 'Validiert und verbessert GitHub Issues',
   },
 ];
 
 const GENERATION_TASKS: PhaseConfig[] = [
   {
     key: 'specGenerationModel',
-    label: 'App Specification',
-    description: 'Generates full application specifications',
+    label: 'App-Spezifikation',
+    description: 'Generiert vollständige Anwendungsspezifikationen',
   },
   {
     key: 'featureGenerationModel',
-    label: 'Feature Generation',
-    description: 'Creates features from specifications',
+    label: 'Feature-Generierung',
+    description: 'Erstellt Features aus Spezifikationen',
   },
   {
     key: 'backlogPlanningModel',
-    label: 'Backlog Planning',
-    description: 'Reorganizes and prioritizes backlog',
+    label: 'Backlog-Planung',
+    description: 'Reorganisiert und priorisiert das Backlog',
   },
   {
     key: 'projectAnalysisModel',
-    label: 'Project Analysis',
-    description: 'Analyzes project structure for suggestions',
+    label: 'Projektanalyse',
+    description: 'Analysiert die Projektstruktur für Vorschläge',
   },
   {
     key: 'suggestionsModel',
-    label: 'AI Suggestions',
-    description: 'Model for feature, refactoring, security, and performance suggestions',
+    label: 'KI-Vorschläge',
+    description: 'Modell für Feature-, Refactoring-, Sicherheits- und Performance-Vorschläge',
   },
 ];
 
 const MEMORY_TASKS: PhaseConfig[] = [
   {
     key: 'memoryExtractionModel',
-    label: 'Memory Extraction',
-    description: 'Extracts learnings from completed agent sessions',
+    label: 'Wissensextraktion',
+    description: 'Extrahiert Erkenntnisse aus abgeschlossenen Agent-Sitzungen',
   },
 ];
 
@@ -127,16 +127,16 @@ export function ModelDefaultsSection() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground tracking-tight">
-                Model Defaults
+                Modell-Standards
               </h2>
               <p className="text-sm text-muted-foreground/80">
-                Configure which AI model to use for each application task
+                Konfiguriere, welches KI-Modell für jede Anwendungsaufgabe verwendet wird
               </p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={resetPhaseModels} className="gap-2">
             <RotateCcw className="w-3.5 h-3.5" />
-            Reset to Defaults
+            Auf Standards zurücksetzen
           </Button>
         </div>
       </div>
@@ -145,29 +145,29 @@ export function ModelDefaultsSection() {
       <div className="p-6 space-y-8">
         {/* Quick Tasks */}
         <PhaseGroup
-          title="Quick Tasks"
-          subtitle="Fast models recommended for speed and cost savings"
+          title="Schnelle Aufgaben"
+          subtitle="Schnelle Modelle empfohlen für Geschwindigkeit und Kostenersparnis"
           phases={QUICK_TASKS}
         />
 
         {/* Validation Tasks */}
         <PhaseGroup
-          title="Validation Tasks"
-          subtitle="Smart models recommended for accuracy"
+          title="Validierungsaufgaben"
+          subtitle="Intelligente Modelle empfohlen für Genauigkeit"
           phases={VALIDATION_TASKS}
         />
 
         {/* Generation Tasks */}
         <PhaseGroup
-          title="Generation Tasks"
-          subtitle="Powerful models recommended for quality output"
+          title="Generierungsaufgaben"
+          subtitle="Leistungsstarke Modelle empfohlen für Qualitätsausgabe"
           phases={GENERATION_TASKS}
         />
 
         {/* Memory Tasks */}
         <PhaseGroup
-          title="Memory Tasks"
-          subtitle="Fast models recommended for learning extraction"
+          title="Wissensaufgaben"
+          subtitle="Schnelle Modelle empfohlen für Wissensextraktion"
           phases={MEMORY_TASKS}
         />
       </div>

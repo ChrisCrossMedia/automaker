@@ -57,6 +57,7 @@ import {
   getMCPServersFromSettings,
   getPromptCustomization,
 } from '../lib/settings-helpers.js';
+import { MegabrainService } from './megabrain-service.js';
 
 const execAsync = promisify(exec);
 
@@ -1939,7 +1940,7 @@ Format your response as a structured markdown document.`;
       return '';
     }
 
-    return planningPrompt + '\n\n---\n\n## Feature Request\n\n';
+    return planningPrompt + '\n\n---\n\n## Feature-Anfrage\n\n';
   }
 
   private buildFeaturePrompt(feature: Feature): string {
@@ -3342,5 +3343,76 @@ If nothing notable: {"learnings": []}`;
     } catch (error) {
       console.warn(`[AutoMode] Failed to extract learnings from feature ${feature.id}:`, error);
     }
+  }
+
+  /**
+   * Run Advocatus Diaboli review on a feature plan before execution
+   * Returns score (0-100) and feedback for improvement
+   */
+  async runAdvocatusReview(
+    feature: Feature,
+    plan?: string
+  ): Promise<{
+    score: number;
+    feedback: string[];
+    approved: boolean;
+    skipped: boolean;
+  }> {
+    const settings = MegabrainService.getSettings();
+
+    // Skip if MEGABRAIN or Advocatus is disabled
+    if (!settings.enabled || !settings.advocatusEnabled) {
+      return { score: 100, feedback: [], approved: true, skipped: true };
+    }
+
+    try {
+      const reviewContent =
+        plan ||
+        `
+Feature: ${feature.title}
+Description: ${feature.description || 'No description'}
+Type: ${feature.type || 'feature'}
+Branch: ${feature.branchName || 'N/A'}
+`;
+
+      const result = await MegabrainService.runAdvocatusReview(reviewContent, feature.title);
+
+      // Emit event for UI
+      this.emitAutoModeEvent('auto_mode_advocatus_review', {
+        featureId: feature.id,
+        score: result.score,
+        feedback: result.feedback,
+        approved: result.approved,
+      });
+
+      if (!result.approved) {
+        logger.warn(
+          `Advocatus Review: Feature ${feature.id} scored ${result.score}/100 - needs improvement`
+        );
+      } else {
+        logger.info(
+          `Advocatus Review: Feature ${feature.id} approved with score ${result.score}/100`
+        );
+      }
+
+      return { ...result, skipped: false };
+    } catch (error) {
+      logger.error('Advocatus Review failed:', error);
+      // Don't block execution on review failure
+      return {
+        score: 100,
+        feedback: ['Review failed - proceeding anyway'],
+        approved: true,
+        skipped: true,
+      };
+    }
+  }
+
+  /**
+   * Check if Advocatus Diaboli review is enabled
+   */
+  isAdvocatusEnabled(): boolean {
+    const settings = MegabrainService.getSettings();
+    return settings.enabled && settings.advocatusEnabled;
   }
 }

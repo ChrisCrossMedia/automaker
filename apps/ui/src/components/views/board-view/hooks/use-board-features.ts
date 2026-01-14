@@ -59,7 +59,7 @@ export function useBoardFeatures({ currentProject }: UseBoardFeaturesProps) {
       const result = await api.features.getAll(currentProject.path);
 
       if (result.success && result.features) {
-        const featuresWithIds = result.features.map((f: any, index: number) => ({
+        const featuresWithIds = result.features.map((f: Partial<Feature>, index: number) => ({
           ...f,
           id: f.id || `feature-${index}-${Date.now()}`,
           status: f.status || 'backlog',

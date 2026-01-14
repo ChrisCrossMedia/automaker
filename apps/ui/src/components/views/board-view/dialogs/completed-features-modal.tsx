@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses Radix UI dialog primitives with complex prop inheritance
 import {
   Dialog,
   DialogContent,

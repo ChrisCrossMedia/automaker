@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Complex board view with multiple hooks and dynamic feature state management
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createLogger } from '@automaker/utils/logger';
 import {
@@ -8,6 +8,8 @@ import {
   rectIntersection,
   pointerWithin,
   type PointerEvent as DndPointerEvent,
+  type CollisionDetectionArgs,
+  type Collision,
 } from '@dnd-kit/core';
 
 // Custom pointer sensor that ignores drag events from within dialogs
@@ -29,7 +31,7 @@ import { useAppStore, Feature } from '@/store/app-store';
 import { getElectronAPI } from '@/lib/electron';
 import { getHttpApiClient } from '@/lib/http-api-client';
 import type { AutoModeEvent } from '@/types/electron';
-import type { ModelAlias, CursorModelId, BacklogPlanResult } from '@automaker/types';
+import type { BacklogPlanResult } from '@automaker/types';
 import { pathsEqual } from '@/lib/utils';
 import { toast } from 'sonner';
 import { getBlockingDependencies } from '@automaker/dependency-resolver';
@@ -98,7 +100,6 @@ export function BoardView() {
     setCurrentWorktree,
     getWorktrees,
     setWorktrees,
-    useWorktrees,
     enableDependencyBlocking,
     skipVerificationInAutoMode,
     planUseSelectedWorktreeBranch,
@@ -112,12 +113,15 @@ export function BoardView() {
   // Subscribe to worktreePanelVisibleByProject to trigger re-renders when it changes
   const worktreePanelVisibleByProject = useAppStore((state) => state.worktreePanelVisibleByProject);
   // Subscribe to showInitScriptIndicatorByProject to trigger re-renders when it changes
-  const showInitScriptIndicatorByProject = useAppStore(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _showInitScriptIndicatorByProject = useAppStore(
     (state) => state.showInitScriptIndicatorByProject
   );
   const getShowInitScriptIndicator = useAppStore((state) => state.getShowInitScriptIndicator);
   const getDefaultDeleteBranch = useAppStore((state) => state.getDefaultDeleteBranch);
-  const shortcuts = useKeyboardShortcutsConfig();
+  // Initialize keyboard shortcuts hook (triggers re-renders when shortcuts change)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _shortcuts = useKeyboardShortcutsConfig();
   const {
     features: hookFeatures,
     isLoading,
@@ -339,10 +343,10 @@ export function BoardView() {
   }, [hookFeatures]);
 
   // Custom collision detection that prioritizes columns over cards
-  const collisionDetectionStrategy = useCallback((args: any) => {
+  const collisionDetectionStrategy = useCallback((args: CollisionDetectionArgs) => {
     // First, check if pointer is within a column
     const pointerCollisions = pointerWithin(args);
-    const columnCollisions = pointerCollisions.filter((collision: any) =>
+    const columnCollisions = pointerCollisions.filter((collision: Collision) =>
       COLUMNS.some((col) => col.id === collision.id)
     );
 
@@ -434,8 +438,6 @@ export function BoardView() {
     handleMoveBackToInProgress,
     handleOpenFollowUp,
     handleSendFollowUp,
-    handleCommitFeature,
-    handleMergeFeature,
     handleCompleteFeature,
     handleUnarchiveFeature,
     handleViewOutput,

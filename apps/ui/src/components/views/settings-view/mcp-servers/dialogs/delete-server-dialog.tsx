@@ -19,21 +19,22 @@ export function DeleteServerDialog({ open, onOpenChange, onConfirm }: DeleteServ
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="mcp-server-delete-dialog">
         <DialogHeader>
-          <DialogTitle>Delete MCP Server</DialogTitle>
+          <DialogTitle>MCP-Server löschen</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this MCP server? This action cannot be undone.
+            Bist du sicher, dass du diesen MCP-Server löschen möchtest? Diese Aktion kann nicht
+            rückgängig gemacht werden.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Abbrechen
           </Button>
           <Button
             variant="destructive"
             onClick={onConfirm}
             data-testid="mcp-server-confirm-delete-button"
           >
-            Delete
+            Löschen
           </Button>
         </DialogFooter>
       </DialogContent>

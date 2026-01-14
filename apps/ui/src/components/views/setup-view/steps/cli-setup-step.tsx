@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component has complex type inference issues with CliSetupConfig generic types
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -73,8 +73,14 @@ interface CliSetupConfig {
   buildCliAuthStatus: (previous: CliSetupAuthStatus | null) => CliSetupAuthStatus;
   buildApiKeyAuthStatus: (previous: CliSetupAuthStatus | null) => CliSetupAuthStatus;
   buildClearedAuthStatus: (previous: CliSetupAuthStatus | null) => CliSetupAuthStatus;
-  statusApi: () => Promise<any>;
-  installApi: () => Promise<any>;
+  statusApi: () => Promise<{
+    success: boolean;
+    installed?: boolean;
+    version?: string;
+    path?: string;
+    auth?: unknown;
+  }>;
+  installApi: () => Promise<{ success: boolean; error?: string }>;
   verifyAuthApi: (
     method: 'cli' | 'api_key',
     apiKey?: string

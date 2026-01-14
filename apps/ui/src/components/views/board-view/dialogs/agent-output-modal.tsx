@@ -74,7 +74,9 @@ export function AgentOutputModal({
 
       try {
         // Use projectPath prop if provided, otherwise fall back to window.__currentProject for backward compatibility
-        const resolvedProjectPath = projectPathProp || (window as any).__currentProject?.path;
+        const resolvedProjectPath =
+          projectPathProp ||
+          (window as unknown as { __currentProject?: { path?: string } }).__currentProject?.path;
         if (!resolvedProjectPath) {
           setIsLoading(false);
           return;

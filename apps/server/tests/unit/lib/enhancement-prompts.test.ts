@@ -30,26 +30,30 @@ describe('enhancement-prompts.ts', () => {
     it('should have non-empty improve system prompt', () => {
       expect(IMPROVE_SYSTEM_PROMPT).toBeDefined();
       expect(IMPROVE_SYSTEM_PROMPT.length).toBeGreaterThan(100);
-      expect(IMPROVE_SYSTEM_PROMPT).toContain('ANALYZE');
-      expect(IMPROVE_SYSTEM_PROMPT).toContain('CLARIFY');
+      // German: ANALYSIERE, KLÄRE
+      expect(IMPROVE_SYSTEM_PROMPT).toContain('ANALYSIERE');
+      expect(IMPROVE_SYSTEM_PROMPT).toContain('KLÄRE');
     });
 
     it('should have non-empty technical system prompt', () => {
       expect(TECHNICAL_SYSTEM_PROMPT).toBeDefined();
       expect(TECHNICAL_SYSTEM_PROMPT.length).toBeGreaterThan(100);
-      expect(TECHNICAL_SYSTEM_PROMPT).toContain('technical');
+      // German: technische
+      expect(TECHNICAL_SYSTEM_PROMPT).toContain('technische');
     });
 
     it('should have non-empty simplify system prompt', () => {
       expect(SIMPLIFY_SYSTEM_PROMPT).toBeDefined();
       expect(SIMPLIFY_SYSTEM_PROMPT.length).toBeGreaterThan(100);
-      expect(SIMPLIFY_SYSTEM_PROMPT).toContain('simplify');
+      // German: vereinfachen
+      expect(SIMPLIFY_SYSTEM_PROMPT).toContain('vereinfachen');
     });
 
     it('should have non-empty acceptance system prompt', () => {
       expect(ACCEPTANCE_SYSTEM_PROMPT).toBeDefined();
       expect(ACCEPTANCE_SYSTEM_PROMPT.length).toBeGreaterThan(100);
-      expect(ACCEPTANCE_SYSTEM_PROMPT).toContain('acceptance criteria');
+      // German: Akzeptanzkriterien
+      expect(ACCEPTANCE_SYSTEM_PROMPT).toContain('Akzeptanzkriterien');
     });
   });
 
@@ -97,25 +101,29 @@ describe('enhancement-prompts.ts', () => {
     it('should return config for improve mode', () => {
       const config = getEnhancementPrompt('improve');
       expect(config.systemPrompt).toBe(IMPROVE_SYSTEM_PROMPT);
-      expect(config.description).toContain('clear');
+      // German: 'klare' = clear
+      expect(config.description).toContain('klare');
     });
 
     it('should return config for technical mode', () => {
       const config = getEnhancementPrompt('technical');
       expect(config.systemPrompt).toBe(TECHNICAL_SYSTEM_PROMPT);
-      expect(config.description).toContain('technical');
+      // German: 'technische' = technical
+      expect(config.description).toContain('technische');
     });
 
     it('should return config for simplify mode', () => {
       const config = getEnhancementPrompt('simplify');
       expect(config.systemPrompt).toBe(SIMPLIFY_SYSTEM_PROMPT);
-      expect(config.description).toContain('concise');
+      // German: 'prägnant' = concise
+      expect(config.description).toContain('prägnant');
     });
 
     it('should return config for acceptance mode', () => {
       const config = getEnhancementPrompt('acceptance');
       expect(config.systemPrompt).toBe(ACCEPTANCE_SYSTEM_PROMPT);
-      expect(config.description).toContain('acceptance');
+      // German: 'Akzeptanzkriterien' = acceptance criteria
+      expect(config.description).toContain('Akzeptanzkriterien');
     });
 
     it('should handle case-insensitive mode', () => {

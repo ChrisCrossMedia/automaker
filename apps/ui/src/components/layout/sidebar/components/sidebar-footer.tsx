@@ -118,7 +118,7 @@ export function SidebarFooter({
               sidebarOpen ? 'justify-start' : 'justify-center',
               'hover:scale-[1.02] active:scale-[0.97]'
             )}
-            title={!sidebarOpen ? 'Running Agents' : undefined}
+            title={!sidebarOpen ? 'Laufende Agenten' : undefined}
             data-testid="running-agents-link"
           >
             <div className="relative">
@@ -151,7 +151,7 @@ export function SidebarFooter({
                 sidebarOpen ? 'block' : 'hidden'
               )}
             >
-              Running Agents
+              Laufende Agenten
             </span>
             {/* Running agents count badge - shown in expanded state */}
             {sidebarOpen && runningAgentsCount > 0 && (
@@ -179,7 +179,7 @@ export function SidebarFooter({
                   'translate-x-1 group-hover:translate-x-0'
                 )}
               >
-                Running Agents
+                Laufende Agenten
                 {runningAgentsCount > 0 && (
                   <span className="ml-2 px-1.5 py-0.5 bg-brand-500 text-white rounded-full text-[10px] font-semibold">
                     {runningAgentsCount}
@@ -213,7 +213,7 @@ export function SidebarFooter({
             sidebarOpen ? 'justify-start' : 'justify-center',
             'hover:scale-[1.02] active:scale-[0.97]'
           )}
-          title={!sidebarOpen ? 'Settings' : undefined}
+          title={!sidebarOpen ? 'Einstellungen' : undefined}
           data-testid="settings-button"
         >
           <Settings
@@ -230,7 +230,7 @@ export function SidebarFooter({
               sidebarOpen ? 'block' : 'hidden'
             )}
           >
-            Settings
+            Einstellungen
           </span>
           {sidebarOpen && (
             <span
@@ -256,7 +256,7 @@ export function SidebarFooter({
                 'translate-x-1 group-hover:translate-x-0'
               )}
             >
-              Settings
+              Einstellungen
               <span className="ml-2 px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono text-muted-foreground">
                 {formatShortcut(shortcuts.settings, true)}
               </span>

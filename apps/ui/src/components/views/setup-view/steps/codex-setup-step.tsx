@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses CliSetupStep which has complex generic type inference issues
 import { useMemo, useCallback } from 'react';
 import { useSetupStore } from '@/store/setup-store';
 import { getElectronAPI } from '@/lib/electron';

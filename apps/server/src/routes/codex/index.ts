@@ -63,10 +63,13 @@ export function createCodexRoutes(
       const { models, cachedAt } = await modelCacheService.getModelsWithMetadata(forceRefresh);
 
       if (models.length === 0) {
-        res.status(503).json({
-          success: false,
-          error: 'Codex CLI not available or not authenticated',
-          message: "Please install Codex CLI and run 'codex login' to authenticate",
+        // Return 200 with empty list instead of 503 to stop repeated polling
+        res.status(200).json({
+          success: true,
+          models: [],
+          cachedAt: null,
+          disabled: true,
+          message: 'Codex is disabled or not configured',
         });
         return;
       }

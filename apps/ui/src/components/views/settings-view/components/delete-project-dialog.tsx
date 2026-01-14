@@ -26,9 +26,9 @@ export function DeleteProjectDialog({
       open={open}
       onOpenChange={onOpenChange}
       onConfirm={handleConfirm}
-      title="Delete Project"
-      description="Are you sure you want to move this project to Trash?"
-      confirmText="Move to Trash"
+      title="Projekt löschen"
+      description="Bist du sicher, dass du dieses Projekt in den Papierkorb verschieben möchtest?"
+      confirmText="In Papierkorb verschieben"
       testId="delete-project-dialog"
       confirmTestId="confirm-delete-project"
     >
@@ -45,7 +45,7 @@ export function DeleteProjectDialog({
           </div>
 
           <p className="text-sm text-muted-foreground">
-            The folder will remain on disk until you permanently delete it from Trash.
+            Der Ordner bleibt auf der Festplatte, bis du ihn endgültig aus dem Papierkorb löschst.
           </p>
         </>
       )}

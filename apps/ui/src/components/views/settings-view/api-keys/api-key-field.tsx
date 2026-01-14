@@ -71,12 +71,12 @@ export function ApiKeyField({ config }: ApiKeyFieldProps) {
           {testButton.loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Testing...
+              Teste...
             </>
           ) : (
             <>
               <Zap className="w-4 h-4 mr-2" />
-              Test
+              Testen
             </>
           )}
         </Button>

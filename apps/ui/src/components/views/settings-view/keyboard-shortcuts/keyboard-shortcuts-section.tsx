@@ -21,12 +21,10 @@ export function KeyboardShortcutsSection({ onOpenKeyboardMap }: KeyboardShortcut
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-600/10 flex items-center justify-center border border-brand-500/20">
             <Settings2 className="w-5 h-5 text-brand-500" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground tracking-tight">
-            Keyboard Shortcuts
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">Tastenkürzel</h2>
         </div>
         <p className="text-sm text-muted-foreground/80 ml-12">
-          Customize keyboard shortcuts for navigation and actions using the visual keyboard map.
+          Tastenkürzel für Navigation und Aktionen mit der visuellen Tastaturkarte anpassen.
         </p>
       </div>
       <div className="p-6">
@@ -39,10 +37,12 @@ export function KeyboardShortcutsSection({ onOpenKeyboardMap }: KeyboardShortcut
             <div className="absolute inset-0 bg-brand-500/10 blur-2xl rounded-full -z-10" />
           </div>
           <div className="space-y-2 max-w-md">
-            <h3 className="text-lg font-semibold text-foreground">Use the Visual Keyboard Map</h3>
+            <h3 className="text-lg font-semibold text-foreground">
+              Visuelle Tastaturkarte verwenden
+            </h3>
             <p className="text-sm text-muted-foreground/80">
-              Click the button below to customize your keyboard shortcuts. The visual interface
-              shows all available keys and lets you easily edit shortcuts.
+              Klicke auf den Button unten, um deine Tastenkürzel anzupassen. Die visuelle Oberfläche
+              zeigt alle verfügbaren Tasten und ermöglicht einfaches Bearbeiten von Kürzeln.
             </p>
           </div>
           <Button
@@ -60,7 +60,7 @@ export function KeyboardShortcutsSection({ onOpenKeyboardMap }: KeyboardShortcut
             )}
           >
             <Keyboard className="w-5 h-5" />
-            Open Keyboard Map
+            Tastaturkarte öffnen
           </Button>
         </div>
       </div>

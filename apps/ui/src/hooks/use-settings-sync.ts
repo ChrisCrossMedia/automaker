@@ -52,6 +52,18 @@ const SETTINGS_FIELDS_TO_SYNC = [
   'opencodeDefaultModel',
   'enabledDynamicModelIds',
   'autoLoadClaudeMd',
+  'privacyGuardEnabled', // Local anonymization toggle
+  'privacyGuardModel', // Ollama model for anonymization
+  'privacyGuardOllamaUrl', // Ollama URL for anonymization
+  'vdbUrl', // Qdrant VDB URL
+  'vdbCollection', // VDB collection name
+  // MEGABRAIN Integration
+  'megabrainEnabled', // MEGABRAIN integration toggle
+  'megabrainApiUrl', // MEGABRAIN API URL
+  'megabrainWsUrl', // MEGABRAIN WebSocket URL
+  'megabrainRagEnabled', // MEGABRAIN RAG enhancement
+  'megabrainSkillsEnabled', // MEGABRAIN Skills execution
+  'megabrainAdvocatusEnabled', // MEGABRAIN Advocatus Diaboli
   'keyboardShortcuts',
   'mcpServers',
   'defaultEditorCommand',
@@ -476,6 +488,20 @@ export async function refreshSettingsFromServer(): Promise<boolean> {
       opencodeDefaultModel: sanitizedOpencodeDefaultModel,
       enabledDynamicModelIds: sanitizedDynamicModelIds,
       autoLoadClaudeMd: serverSettings.autoLoadClaudeMd ?? false,
+      // Privacy Guard Settings
+      privacyGuardEnabled: serverSettings.privacyGuardEnabled ?? false,
+      privacyGuardModel: serverSettings.privacyGuardModel ?? 'qwen2.5:7b',
+      privacyGuardOllamaUrl: serverSettings.privacyGuardOllamaUrl ?? 'http://localhost:11434',
+      // VDB Settings
+      vdbUrl: serverSettings.vdbUrl ?? 'http://192.168.10.1:6333',
+      vdbCollection: serverSettings.vdbCollection ?? 'automaker_knowledge',
+      // MEGABRAIN Settings - WICHTIG: Vom Server laden!
+      megabrainEnabled: serverSettings.megabrainEnabled ?? false,
+      megabrainApiUrl: serverSettings.megabrainApiUrl ?? 'http://localhost:8081',
+      megabrainWsUrl: serverSettings.megabrainWsUrl ?? 'ws://localhost:8082',
+      megabrainRagEnabled: serverSettings.megabrainRagEnabled ?? false,
+      megabrainSkillsEnabled: serverSettings.megabrainSkillsEnabled ?? true,
+      megabrainAdvocatusEnabled: serverSettings.megabrainAdvocatusEnabled ?? false,
       keyboardShortcuts: {
         ...currentAppState.keyboardShortcuts,
         ...(serverSettings.keyboardShortcuts as unknown as Partial<

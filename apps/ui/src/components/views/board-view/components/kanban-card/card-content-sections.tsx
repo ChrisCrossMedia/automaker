@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses conditional rendering with template literals
 import { Feature } from '@/store/app-store';
 import { GitBranch, GitPullRequest, ExternalLink } from 'lucide-react';
 

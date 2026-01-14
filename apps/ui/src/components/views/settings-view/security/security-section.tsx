@@ -26,10 +26,10 @@ export function SecuritySection({
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20">
             <Shield className="w-5 h-5 text-primary" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground tracking-tight">Security</h2>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">Sicherheit</h2>
         </div>
         <p className="text-sm text-muted-foreground/80 ml-12">
-          Configure security warnings and protections.
+          Sicherheitswarnungen und -schutzmaßnahmen konfigurieren.
         </p>
       </div>
       <div className="p-6 space-y-4">
@@ -44,10 +44,10 @@ export function SecuritySection({
                 htmlFor="sandbox-warning-toggle"
                 className="font-medium text-foreground cursor-pointer"
               >
-                Show Sandbox Warning on Startup
+                Sandbox-Warnung beim Start anzeigen
               </Label>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
-                Display a security warning when not running in a sandboxed environment
+                Sicherheitswarnung anzeigen, wenn nicht in einer Sandbox-Umgebung ausgeführt wird
               </p>
             </div>
           </div>
@@ -61,9 +61,9 @@ export function SecuritySection({
 
         {/* Info text */}
         <p className="text-xs text-muted-foreground/60 px-4">
-          When enabled, you&apos;ll see a warning on app startup if you&apos;re not running in a
-          containerized environment (like Docker). This helps remind you to use proper isolation
-          when running AI agents.
+          Wenn aktiviert, wird beim App-Start eine Warnung angezeigt, wenn du nicht in einer
+          Container-Umgebung (wie Docker) arbeitest. Dies erinnert dich daran, beim Ausführen von
+          KI-Agenten eine ordnungsgemäße Isolation zu verwenden.
         </p>
       </div>
     </div>

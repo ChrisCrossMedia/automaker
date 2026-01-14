@@ -48,13 +48,13 @@ function IdeationBreadcrumbs({
             onClick={() => onNavigate('prompts', null)}
             className="hover:text-foreground transition-colors"
           >
-            Generate Ideas
+            Ideen generieren
           </button>
           <ChevronRight className="w-3 h-3" />
           <span className="text-foreground">{categoryInfo.name}</span>
         </>
       ) : (
-        <span className="text-foreground">Generate Ideas</span>
+        <span className="text-foreground">Ideen generieren</span>
       )}
     </nav>
   );
@@ -88,14 +88,14 @@ function IdeationHeader({
   // Get subtitle text based on current mode
   const getSubtitle = (): string => {
     if (currentMode === 'dashboard') {
-      return 'Review and accept generated ideas';
+      return 'Ideen überprüfen und übernehmen';
     }
     if (currentMode === 'prompts') {
       if (selectedCategory) {
         const categoryInfo = getCategoryById(selectedCategory);
-        return `Select a prompt from ${categoryInfo?.name || 'category'}`;
+        return `Wähle einen Prompt aus ${categoryInfo?.name || 'Kategorie'}`;
       }
-      return 'Select a category to generate ideas';
+      return 'Wähle eine Kategorie, um Ideen zu generieren';
     }
     return '';
   };
@@ -140,12 +140,12 @@ function IdeationHeader({
             ) : (
               <CheckCheck className="w-4 h-4" />
             )}
-            Accept All ({acceptAllCount})
+            Alle übernehmen ({acceptAllCount})
           </Button>
         )}
         <Button onClick={onGenerateIdeas} className="gap-2">
           <Lightbulb className="w-4 h-4" />
-          Generate Ideas
+          Ideen generieren
         </Button>
       </div>
     </div>
@@ -223,7 +223,7 @@ export function IdeationView() {
         data-testid="ideation-view"
       >
         <div className="text-center text-muted-foreground">
-          <p>Open a project to start brainstorming ideas</p>
+          <p>Öffne ein Projekt, um Ideen zu brainstormen</p>
         </div>
       </div>
     );

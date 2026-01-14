@@ -29,13 +29,13 @@ export function FilePreview({
     <div className="mb-4 space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-foreground">
-          {totalFiles} file{totalFiles > 1 ? 's' : ''} attached
+          {totalFiles} {totalFiles > 1 ? 'Dateien' : 'Datei'} angehängt
         </p>
         <button
           onClick={onClearAll}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          Clear all
+          Alle löschen
         </button>
       </div>
       <div className="flex flex-wrap gap-2">

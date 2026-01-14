@@ -1,90 +1,93 @@
 /**
- * "Acceptance" Enhancement Mode
- * Adds testable acceptance criteria to task descriptions.
+ * "Akzeptanzkriterien" Enhancement Mode
+ * Fügt testbare Akzeptanzkriterien zu Aufgabenbeschreibungen hinzu.
  */
 
 import type { EnhancementExample } from '@automaker/types';
 
 /**
- * System prompt for the "acceptance" enhancement mode.
- * Adds testable acceptance criteria to task descriptions.
+ * System-Prompt für den "akzeptanzkriterien" Enhancement-Modus.
+ * Fügt testbare Akzeptanzkriterien zu Aufgabenbeschreibungen hinzu.
  */
-export const ACCEPTANCE_SYSTEM_PROMPT = `You are a QA specialist skilled at defining testable acceptance criteria for software features.
+export const ACCEPTANCE_SYSTEM_PROMPT = `Du bist ein QA-Spezialist, der sich darauf spezialisiert hat, testbare Akzeptanzkriterien für Software-Features zu definieren.
 
-Your task is to enhance a task description by adding clear acceptance criteria:
+WICHTIG: Antworte IMMER auf Deutsch!
 
-1. UNDERSTAND the feature:
-   - Identify all user-facing behaviors
-   - Note system state changes
-   - Consider different user roles or scenarios
+Deine Aufgabe ist es, eine Aufgabenbeschreibung durch klare Akzeptanzkriterien zu erweitern:
 
-2. DEFINE acceptance criteria using Given-When-Then format:
-   - Given: The initial context or preconditions
-   - When: The action or trigger
-   - Then: The expected outcome
+1. VERSTEHE das Feature:
+   - Identifiziere alle benutzersichtbaren Verhaltensweisen
+   - Notiere Systemzustandsänderungen
+   - Berücksichtige verschiedene Benutzerrollen oder Szenarien
 
-3. COVER key scenarios:
-   - Happy path (successful completion)
-   - Edge cases (boundary conditions)
-   - Error scenarios (what should NOT happen)
-   - Performance requirements if relevant
+2. DEFINIERE Akzeptanzkriterien im GEGEBEN-WENN-DANN Format:
+   - Gegeben: Der initiale Kontext oder Vorbedingungen
+   - Wenn: Die Aktion oder der Auslöser
+   - Dann: Das erwartete Ergebnis
 
-4. MAKE criteria testable:
-   - Use specific, measurable outcomes
-   - Avoid vague terms like "quickly" or "easily"
-   - Include specific values where applicable
+3. DECKE wichtige Szenarien AB:
+   - Erfolgspfad (erfolgreicher Abschluss)
+   - Grenzfälle (Randbedingungen)
+   - Fehlerszenarien (was NICHT passieren sollte)
+   - Performance-Anforderungen falls relevant
 
-Output the original description followed by a clear "Acceptance Criteria:" section with numbered, testable criteria. Do not include explanations about your process.`;
+4. MACHE Kriterien testbar:
+   - Verwende spezifische, messbare Ergebnisse
+   - Vermeide vage Begriffe wie "schnell" oder "einfach"
+   - Füge spezifische Werte hinzu wo anwendbar
+
+Gib die ursprüngliche Beschreibung gefolgt von einem klaren "Akzeptanzkriterien:"-Abschnitt mit nummerierten, testbaren Kriterien aus. Füge keine Erklärungen zu deinem Prozess hinzu.`;
 
 /**
- * Few-shot examples for the "acceptance" enhancement mode
+ * Beispiele für den "akzeptanzkriterien" Enhancement-Modus
  */
 export const ACCEPTANCE_EXAMPLES: EnhancementExample[] = [
   {
-    input: 'Add password reset functionality',
-    output: `Add Password Reset Functionality
+    input: 'Passwort-Zurücksetzung hinzufügen',
+    output: `Passwort-Zurücksetzungsfunktion hinzufügen
 
-Allow users to reset their password via email when they forget it.
+Ermögliche Benutzern, ihr Passwort per E-Mail zurückzusetzen, wenn sie es vergessen haben.
 
-Acceptance Criteria:
+Akzeptanzkriterien:
 
-1. Given a user is on the login page, when they click "Forgot Password", then they should see a password reset form requesting their email.
+1. Gegeben ein Benutzer ist auf der Login-Seite, wenn er auf "Passwort vergessen" klickt, dann sollte er ein Passwort-Zurücksetzungsformular sehen, das seine E-Mail anfordert.
 
-2. Given a user enters a valid registered email, when they submit the form, then they should receive a password reset email within 2 minutes.
+2. Gegeben ein Benutzer gibt eine gültige registrierte E-Mail ein, wenn er das Formular absendet, dann sollte er innerhalb von 2 Minuten eine Passwort-Zurücksetzungs-E-Mail erhalten.
 
-3. Given a user clicks the reset link in their email, when the link is less than 1 hour old, then they should see a form to enter a new password.
+3. Gegeben ein Benutzer klickt auf den Zurücksetzungslink in seiner E-Mail, wenn der Link weniger als 1 Stunde alt ist, dann sollte er ein Formular zur Eingabe eines neuen Passworts sehen.
 
-4. Given a user enters a new valid password (min 8 chars, 1 number, 1 special char), when they submit, then their password should be updated and they should be redirected to login.
+4. Gegeben ein Benutzer gibt ein neues gültiges Passwort ein (min. 8 Zeichen, 1 Zahl, 1 Sonderzeichen), wenn er absendet, dann sollte sein Passwort aktualisiert werden und er sollte zum Login weitergeleitet werden.
 
-5. Given a user enters an unregistered email, when they submit the reset form, then they should see the same success message (security: don't reveal which emails exist).
+5. Gegeben ein Benutzer gibt eine nicht registrierte E-Mail ein, wenn er das Zurücksetzungsformular absendet, dann sollte er dieselbe Erfolgsmeldung sehen (Sicherheit: nicht preisgeben welche E-Mails existieren).
 
-6. Given a reset link older than 1 hour, when a user clicks it, then they should see an expiration message with option to request a new link.`,
+6. Gegeben ein Zurücksetzungslink älter als 1 Stunde, wenn ein Benutzer ihn anklickt, dann sollte er eine Ablaufmeldung mit Option zur Anforderung eines neuen Links sehen.`,
   },
   {
-    input: 'Shopping cart checkout',
-    output: `Shopping Cart Checkout
+    input: 'Warenkorb-Checkout',
+    output: `Warenkorb-Checkout
 
-Implement the checkout flow for purchasing items in the shopping cart.
+Implementiere den Checkout-Ablauf für den Kauf von Artikeln im Warenkorb.
 
-Acceptance Criteria:
+Akzeptanzkriterien:
 
-1. Given a user has items in their cart, when they click "Checkout", then they should see an order summary with item details and total price.
+1. Gegeben ein Benutzer hat Artikel in seinem Warenkorb, wenn er auf "Zur Kasse" klickt, dann sollte er eine Bestellübersicht mit Artikeldetails und Gesamtpreis sehen.
 
-2. Given a user is on the checkout page, when they enter valid shipping information, then the form should validate in real-time and show estimated delivery date.
+2. Gegeben ein Benutzer ist auf der Checkout-Seite, wenn er gültige Versandinformationen eingibt, dann sollte das Formular in Echtzeit validieren und das geschätzte Lieferdatum anzeigen.
 
-3. Given valid shipping info is entered, when the user proceeds to payment, then they should see available payment methods (credit card, PayPal).
+3. Gegeben gültige Versandinfos sind eingegeben, wenn der Benutzer zur Zahlung fortfährt, dann sollte er verfügbare Zahlungsmethoden sehen (Kreditkarte, PayPal).
 
-4. Given valid payment details are entered, when the user confirms the order, then the payment should be processed and order confirmation displayed within 5 seconds.
+4. Gegeben gültige Zahlungsdetails sind eingegeben, wenn der Benutzer die Bestellung bestätigt, dann sollte die Zahlung verarbeitet und die Bestellbestätigung innerhalb von 5 Sekunden angezeigt werden.
 
-5. Given a successful order, when confirmation is shown, then the user should receive an email receipt and their cart should be emptied.
+5. Gegeben eine erfolgreiche Bestellung, wenn die Bestätigung angezeigt wird, dann sollte der Benutzer eine E-Mail-Quittung erhalten und sein Warenkorb sollte geleert werden.
 
-6. Given a payment failure, when the error occurs, then the user should see a clear error message and their cart should remain intact.
+6. Gegeben ein Zahlungsfehler, wenn der Fehler auftritt, dann sollte der Benutzer eine klare Fehlermeldung sehen und sein Warenkorb sollte intakt bleiben.
 
-7. Given the user closes the browser during checkout, when they return, then their cart contents should still be available.`,
+7. Gegeben der Benutzer schließt den Browser während des Checkouts, wenn er zurückkehrt, dann sollte sein Warenkorbinhalt weiterhin verfügbar sein.`,
   },
 ];
 
 /**
- * Description of what this enhancement mode does
+ * Beschreibung dessen, was dieser Enhancement-Modus macht
  */
-export const ACCEPTANCE_DESCRIPTION = 'Add testable acceptance criteria to task descriptions';
+export const ACCEPTANCE_DESCRIPTION =
+  'Füge testbare Akzeptanzkriterien zu Aufgabenbeschreibungen hinzu';

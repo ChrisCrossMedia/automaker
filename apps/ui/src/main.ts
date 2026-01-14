@@ -8,6 +8,7 @@
  */
 
 import path from 'path';
+import fs from 'fs';
 import { spawn, execSync, ChildProcess } from 'child_process';
 import crypto from 'crypto';
 import http, { Server } from 'http';
@@ -28,8 +29,6 @@ import {
   // Electron app bundle operations
   setElectronAppPaths,
   electronAppExists,
-  electronAppReadFileSync,
-  electronAppStatSync,
   electronAppStat,
   electronAppReadFile,
   // System path operations
@@ -108,10 +107,6 @@ async function findAvailablePort(preferredPort: number): Promise<number> {
 // Calculation: 4 columns × 280px + 3 gaps × 20px + 40px padding = 1220px board content
 // With sidebar expanded (288px): 1220 + 288 = 1508px
 // Minimum window dimensions - reduced to allow smaller windows since kanban now supports horizontal scrolling
-const SIDEBAR_EXPANDED = 288;
-const SIDEBAR_COLLAPSED = 64;
-
-const MIN_WIDTH_EXPANDED = 800; // Reduced - horizontal scrolling handles overflow
 const MIN_WIDTH_COLLAPSED = 600; // Reduced - horizontal scrolling handles overflow
 const MIN_HEIGHT = 500; // Reduced to allow more flexibility
 const DEFAULT_WIDTH = 1600;
@@ -144,6 +139,9 @@ const API_KEY_FILENAME = '.api-key';
  * Ensure an API key exists - load from file or generate new one.
  * This key is passed to the server for CSRF protection.
  * Uses centralized electronUserData methods for path validation.
+ *
+ * WICHTIG: Der Key wird auch ins ./data Verzeichnis synchronisiert,
+ * damit der Server (der separat läuft) den gleichen Key verwendet.
  */
 function ensureApiKey(): string {
   try {
@@ -152,6 +150,8 @@ function ensureApiKey(): string {
       if (key) {
         apiKey = key;
         logger.info('Loaded existing API key');
+        // Synchronisiere zum Server-DATA_DIR (./data)
+        syncApiKeyToServerDataDir(apiKey);
         return apiKey;
       }
     }
@@ -164,10 +164,41 @@ function ensureApiKey(): string {
   try {
     electronUserDataWriteFileSync(API_KEY_FILENAME, apiKey, { encoding: 'utf-8', mode: 0o600 });
     logger.info('Generated new API key');
+    // Synchronisiere zum Server-DATA_DIR (./data)
+    syncApiKeyToServerDataDir(apiKey);
   } catch (error) {
     logger.error('Failed to save API key:', error);
   }
   return apiKey;
+}
+
+/**
+ * Synchronisiert den API-Key zum Server-DATA_DIR (./data).
+ * Im Dev-Modus läuft der Server separat und liest aus ./data/.api-key.
+ * Diese Funktion stellt sicher, dass beide Verzeichnisse den gleichen Key haben.
+ */
+function syncApiKeyToServerDataDir(key: string): void {
+  try {
+    const serverDataDir = path.join(__dirname, '../../data');
+
+    // Stelle sicher, dass das Verzeichnis existiert
+    if (!fs.existsSync(serverDataDir)) {
+      fs.mkdirSync(serverDataDir, { recursive: true, mode: 0o700 });
+    }
+
+    const serverKeyPath = path.join(serverDataDir, '.api-key');
+    const existingKey = fs.existsSync(serverKeyPath)
+      ? fs.readFileSync(serverKeyPath, 'utf-8').trim()
+      : '';
+
+    // Nur schreiben wenn der Key unterschiedlich ist
+    if (existingKey !== key) {
+      fs.writeFileSync(serverKeyPath, key, { encoding: 'utf-8', mode: 0o600 });
+      logger.info('API key synchronized to server data directory');
+    }
+  } catch (error) {
+    logger.warn('Failed to sync API key to server data dir:', error);
+  }
 }
 
 /**
@@ -706,11 +737,24 @@ app.whenReady().then(async () => {
       await waitForServer(60); // Give Docker container more time to start
       logger.info('External server is ready');
 
-      // In external server mode, we don't set an API key here.
-      // The renderer will detect external server mode and use session-based
-      // auth like web mode, redirecting to /login where the user enters
-      // the API key from the Docker container logs.
-      logger.info('External server mode: using session-based authentication');
+      // In external server mode, load the API key from ./data/.api-key
+      // This is the same file the Docker container uses for auth
+      // Note: __dirname is apps/ui/dist-electron, so we need ../../../data
+      try {
+        const serverApiKeyPath = path.join(__dirname, '../../../data/.api-key');
+        logger.info('Looking for API key at:', serverApiKeyPath);
+        if (fs.existsSync(serverApiKeyPath)) {
+          apiKey = fs.readFileSync(serverApiKeyPath, 'utf-8').trim();
+          logger.info(
+            'Loaded API key from server data directory:',
+            apiKey?.substring(0, 8) + '...'
+          );
+        } else {
+          logger.warn('No API key found at:', serverApiKeyPath);
+        }
+      } catch (error) {
+        logger.error('Failed to load API key from server data dir:', error);
+      }
     } else {
       // Generate or load API key for CSRF protection (before starting server)
       ensureApiKey();
@@ -935,11 +979,9 @@ ipcMain.handle('server:getUrl', async () => {
 });
 
 // Get API key for authentication
-// Returns null in external server mode to trigger session-based auth
+// In external server mode, we still return the API key (loaded from ./data/.api-key)
+// so that Electron can authenticate with the Docker server directly
 ipcMain.handle('auth:getApiKey', () => {
-  if (isExternalServerMode) {
-    return null;
-  }
   return apiKey;
 });
 

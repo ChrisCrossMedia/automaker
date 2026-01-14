@@ -120,7 +120,7 @@ export function OpencodeSettingsTab() {
       }
     };
     loadDynamicContent();
-  }, [cliStatus?.success, cliStatus?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cliStatus?.success, cliStatus?.status]);
 
   useEffect(() => {
     const refreshModelsForNewProviders = async () => {
@@ -240,7 +240,7 @@ export function OpencodeSettingsTab() {
       try {
         setOpencodeDefaultModel(model);
         toast.success('Default model updated');
-      } catch (error) {
+      } catch {
         toast.error('Failed to update default model');
       } finally {
         setIsSaving(false);
@@ -254,7 +254,7 @@ export function OpencodeSettingsTab() {
       setIsSaving(true);
       try {
         toggleOpencodeModel(model, enabled);
-      } catch (error) {
+      } catch {
         toast.error('Failed to update models');
       } finally {
         setIsSaving(false);
@@ -268,7 +268,7 @@ export function OpencodeSettingsTab() {
       setIsSaving(true);
       try {
         toggleDynamicModel(modelId, enabled);
-      } catch (error) {
+      } catch {
         toast.error('Failed to update dynamic model');
       } finally {
         setIsSaving(false);

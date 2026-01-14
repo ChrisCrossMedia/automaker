@@ -40,8 +40,8 @@ export function ConfirmDialog({
   icon: Icon,
   iconClassName = 'text-primary',
   children,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText = 'Bestätigen',
+  cancelText = 'Abbrechen',
   confirmVariant = 'default',
 }: ConfirmDialogProps) {
   const handleConfirm = () => {

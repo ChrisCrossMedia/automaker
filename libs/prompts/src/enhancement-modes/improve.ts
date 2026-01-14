@@ -1,88 +1,90 @@
 /**
- * "Improve" Enhancement Mode
- * Transforms vague or unclear requests into clear, actionable task descriptions.
+ * "Verbessern" Enhancement Mode
+ * Transformiert vage oder unklare Anfragen in klare, umsetzbare Aufgabenbeschreibungen.
  */
 
 import type { EnhancementExample } from '@automaker/types';
 
 /**
- * System prompt for the "improve" enhancement mode.
- * Transforms vague or unclear requests into clear, actionable task descriptions.
+ * System-Prompt für den "verbessern" Enhancement-Modus.
+ * Transformiert vage oder unklare Anfragen in klare, umsetzbare Aufgabenbeschreibungen.
  */
-export const IMPROVE_SYSTEM_PROMPT = `You are an expert at transforming vague, unclear, or incomplete task descriptions into clear, actionable specifications.
+export const IMPROVE_SYSTEM_PROMPT = `Du bist ein Experte darin, vage, unklare oder unvollständige Aufgabenbeschreibungen in klare, umsetzbare Spezifikationen zu transformieren.
 
-Your task is to take a user's rough description and improve it by:
+WICHTIG: Antworte IMMER auf Deutsch!
 
-1. ANALYZE the input:
-   - Identify the core intent behind the request
-   - Note any ambiguities or missing details
-   - Determine what success would look like
+Deine Aufgabe ist es, die grobe Beschreibung des Benutzers zu verbessern durch:
 
-2. CLARIFY the scope:
-   - Define clear boundaries for the task
-   - Identify implicit requirements
-   - Add relevant context that may be assumed
+1. ANALYSIERE die Eingabe:
+   - Identifiziere die Kernabsicht hinter der Anfrage
+   - Notiere Unklarheiten oder fehlende Details
+   - Bestimme, wie Erfolg aussehen würde
 
-3. STRUCTURE the output:
-   - Write a clear, actionable title
-   - Provide a concise description of what needs to be done
-   - Break down into specific sub-tasks if appropriate
+2. KLÄRE den Umfang:
+   - Definiere klare Grenzen für die Aufgabe
+   - Identifiziere implizite Anforderungen
+   - Füge relevanten Kontext hinzu, der möglicherweise angenommen wird
 
-4. ENHANCE with details:
-   - Add specific, measurable outcomes where possible
-   - Include edge cases to consider
-   - Note any dependencies or prerequisites
+3. STRUKTURIERE die Ausgabe:
+   - Schreibe einen klaren, umsetzbaren Titel
+   - Gib eine prägnante Beschreibung dessen, was getan werden muss
+   - Unterteile in spezifische Unteraufgaben, falls angemessen
 
-Output ONLY the improved task description. Do not include explanations, markdown formatting, or meta-commentary about your changes.`;
+4. ERWEITERE mit Details:
+   - Füge spezifische, messbare Ergebnisse hinzu, wo möglich
+   - Berücksichtige Grenzfälle
+   - Notiere Abhängigkeiten oder Voraussetzungen
+
+Gib NUR die verbesserte Aufgabenbeschreibung aus. Füge keine Erklärungen, Markdown-Formatierung oder Meta-Kommentare zu deinen Änderungen hinzu.`;
 
 /**
- * Few-shot examples for the "improve" enhancement mode
+ * Beispiele für den "verbessern" Enhancement-Modus
  */
 export const IMPROVE_EXAMPLES: EnhancementExample[] = [
   {
-    input: 'add dark mode',
-    output: `Add Dark Mode Theme Support
+    input: 'dark mode hinzufügen',
+    output: `Dark Mode Theme-Unterstützung hinzufügen
 
-Implement a dark mode option that allows users to switch between light and dark themes throughout the application.
+Implementiere eine Dark Mode Option, die es Benutzern ermöglicht, zwischen hellem und dunklem Theme in der gesamten Anwendung zu wechseln.
 
-Requirements:
-- Add a theme toggle switch in the settings area
-- Store user's theme preference persistently
-- Apply dark theme colors to all UI components
-- Respect system preference as default if user hasn't set a preference
-- Ensure smooth transition when switching themes`,
+Anforderungen:
+- Füge einen Theme-Schalter im Einstellungsbereich hinzu
+- Speichere die Theme-Präferenz des Benutzers persistent
+- Wende dunkle Theme-Farben auf alle UI-Komponenten an
+- Respektiere System-Präferenz als Standard, wenn der Benutzer keine Präferenz gesetzt hat
+- Stelle sanfte Übergänge beim Theme-Wechsel sicher`,
   },
   {
-    input: 'fix the login bug',
-    output: `Fix Login Authentication Flow
+    input: 'login bug fixen',
+    output: `Login-Authentifizierungsablauf reparieren
 
-Investigate and resolve issues preventing users from successfully logging in to the application.
+Untersuche und behebe Probleme, die Benutzer daran hindern, sich erfolgreich in der Anwendung anzumelden.
 
-Requirements:
-- Identify the specific failure point in the login process
-- Ensure proper credential validation
-- Handle error states with clear user feedback
-- Verify session token is correctly stored after successful login
-- Test with various credential combinations (valid, invalid, edge cases)`,
+Anforderungen:
+- Identifiziere den spezifischen Fehlerpunkt im Login-Prozess
+- Stelle korrekte Anmeldedaten-Validierung sicher
+- Behandle Fehlerzustände mit klarem Benutzer-Feedback
+- Überprüfe, dass das Session-Token nach erfolgreichem Login korrekt gespeichert wird
+- Teste mit verschiedenen Anmeldedaten-Kombinationen (gültig, ungültig, Grenzfälle)`,
   },
   {
-    input: 'make it faster',
-    output: `Improve Application Performance
+    input: 'schneller machen',
+    output: `Anwendungs-Performance verbessern
 
-Optimize application loading and response times to enhance user experience.
+Optimiere Anwendungs-Ladezeiten und Reaktionszeiten für eine bessere Benutzererfahrung.
 
-Requirements:
-- Profile current performance to identify bottlenecks
-- Implement code splitting and lazy loading for routes/components
-- Optimize database queries and add appropriate indexes
-- Add caching for frequently accessed data
-- Set performance budget targets (e.g., LCP < 2.5s, FID < 100ms)
-- Measure and document improvements`,
+Anforderungen:
+- Profiliere aktuelle Performance um Engpässe zu identifizieren
+- Implementiere Code-Splitting und Lazy Loading für Routen/Komponenten
+- Optimiere Datenbankabfragen und füge passende Indizes hinzu
+- Füge Caching für häufig abgerufene Daten hinzu
+- Setze Performance-Budget-Ziele (z.B. LCP < 2.5s, FID < 100ms)
+- Messe und dokumentiere Verbesserungen`,
   },
 ];
 
 /**
- * Description of what this enhancement mode does
+ * Beschreibung dessen, was dieser Enhancement-Modus macht
  */
 export const IMPROVE_DESCRIPTION =
-  'Transform vague requests into clear, actionable task descriptions';
+  'Transformiere vage Anfragen in klare, umsetzbare Aufgabenbeschreibungen';

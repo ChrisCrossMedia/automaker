@@ -1,10 +1,9 @@
-// @ts-nocheck
+// @ts-nocheck - Dynamic model loading and provider switching requires flexible typing
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Brain, AlertTriangle } from 'lucide-react';
 import { AnthropicIcon, CursorIcon, OpenAIIcon } from '@/components/ui/provider-icon';
 import { cn } from '@/lib/utils';
-import type { ModelAlias } from '@/store/app-store';
 import { useAppStore } from '@/store/app-store';
 import { useSetupStore } from '@/store/setup-store';
 import { getModelProvider, PROVIDER_PREFIXES, stripProviderPrefix } from '@automaker/types';
@@ -71,7 +70,7 @@ export function ModelSelector({
   const filteredCursorModels = CURSOR_MODELS.filter((model) => {
     // Extract the cursor model ID from the prefixed ID (e.g., "cursor-auto" -> "auto")
     const cursorModelId = stripProviderPrefix(model.id);
-    return enabledCursorModels.includes(cursorModelId as any);
+    return enabledCursorModels.includes(cursorModelId as (typeof enabledCursorModels)[number]);
   });
 
   const handleProviderChange = (provider: ModelProvider) => {

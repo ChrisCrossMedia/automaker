@@ -1,6 +1,5 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses dynamic event handlers and external library types that require flexible typing
 import { useState, useEffect, useRef } from 'react';
-import { createLogger } from '@automaker/utils/logger';
 import {
   Dialog,
   DialogContent,
@@ -25,18 +24,10 @@ import { Play, Cpu, FolderKanban } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { modelSupportsThinking } from '@/lib/utils';
-import {
-  useAppStore,
-  ModelAlias,
-  ThinkingLevel,
-  FeatureImage,
-  PlanningMode,
-  Feature,
-} from '@/store/app-store';
+import { useAppStore, ThinkingLevel, FeatureImage, PlanningMode, Feature } from '@/store/app-store';
 import type { ReasoningEffort, PhaseModelEntry } from '@automaker/types';
 import { supportsReasoningEffort, isClaudeModel } from '@automaker/types';
 import {
-  TestingTabContent,
   PrioritySelector,
   WorkModeSelector,
   PlanningModeSelect,
@@ -53,8 +44,6 @@ import {
   formatAncestorContextForPrompt,
   type AncestorContext,
 } from '@automaker/dependency-resolver';
-
-const logger = createLogger('AddFeatureDialog');
 
 /**
  * Determines the default work mode based on global settings and current worktree selection.

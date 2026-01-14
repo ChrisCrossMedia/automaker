@@ -31,30 +31,30 @@ interface InterviewState {
   additionalNotes: string;
 }
 
-// Interview questions flow
+// Interview questions flow - German
 const INTERVIEW_QUESTIONS = [
   {
     id: 'project-description',
-    question: 'What do you want to build?',
-    hint: 'Describe your project idea in a few sentences',
+    question: 'Was möchtest du entwickeln?',
+    hint: 'Beschreibe deine Projektidee in wenigen Sätzen',
     field: 'projectDescription' as const,
   },
   {
     id: 'tech-stack',
-    question: 'What tech stack would you like to use?',
-    hint: 'e.g., React, Next.js, Node.js, Python, etc.',
+    question: 'Welchen Tech-Stack möchtest du verwenden?',
+    hint: 'z.B. React, Next.js, Node.js, Python, etc.',
     field: 'techStack' as const,
   },
   {
     id: 'core-features',
-    question: 'What are the core features you want to include?',
-    hint: 'List the main functionalities your app should have',
+    question: 'Welche Kernfunktionen soll dein Projekt haben?',
+    hint: 'Liste die wichtigsten Funktionalitäten auf',
     field: 'features' as const,
   },
   {
     id: 'additional',
-    question: 'Any additional requirements or preferences?',
-    hint: 'Design preferences, integrations, deployment needs, etc.',
+    question: 'Gibt es weitere Anforderungen oder Präferenzen?',
+    hint: 'Design-Vorlieben, Integrationen, Deployment-Anforderungen, etc.',
     field: 'additionalNotes' as const,
   },
 ];
@@ -118,7 +118,7 @@ export function InterviewView() {
       const welcomeMessage: InterviewMessage = {
         id: 'welcome',
         role: 'assistant',
-        content: `Hello! I'm here to help you plan your new project. Let's go through a few questions to understand what you want to build.\n\n**${INTERVIEW_QUESTIONS[0].question}**\n\n_${INTERVIEW_QUESTIONS[0].hint}_`,
+        content: `Hallo! Ich bin hier, um dir bei der Planung deines neuen Projekts zu helfen. Lass uns ein paar Fragen durchgehen, um zu verstehen, was du entwickeln möchtest.\n\n**${INTERVIEW_QUESTIONS[0].question}**\n\n_${INTERVIEW_QUESTIONS[0].hint}_`,
         timestamp: new Date(),
       };
       setMessages([welcomeMessage]);
@@ -194,7 +194,7 @@ export function InterviewView() {
         const assistantMessage: InterviewMessage = {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content: `Great! **${nextQuestion.question}**\n\n_${nextQuestion.hint}_`,
+          content: `Super! **${nextQuestion.question}**\n\n_${nextQuestion.hint}_`,
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
@@ -205,7 +205,7 @@ export function InterviewView() {
           id: `assistant-summary-${Date.now()}`,
           role: 'assistant',
           content:
-            'Perfect! I have all the information I need. Now let me generate your project specification...',
+            'Perfekt! Ich habe alle Informationen, die ich brauche. Jetzt erstelle ich deine Projektspezifikation...',
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, summaryMessage]);
@@ -249,7 +249,7 @@ export function InterviewView() {
     const completionMessage: InterviewMessage = {
       id: `assistant-complete-${Date.now()}`,
       role: 'assistant',
-      content: `I've generated a draft project specification based on our conversation!\n\nPlease provide a project name and choose where to save your project, then click "Create Project" to get started.`,
+      content: `Ich habe eine Projektspezifikation basierend auf unserem Gespräch erstellt!\n\nBitte gib einen Projektnamen ein und wähle, wo dein Projekt gespeichert werden soll. Dann klicke auf "Projekt erstellen", um loszulegen.`,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, completionMessage]);
@@ -302,8 +302,9 @@ export function InterviewView() {
 
   const handleSelectDirectory = async () => {
     const selectedPath = await openFileBrowser({
-      title: 'Select Base Directory',
-      description: 'Choose the parent directory where your new project will be created',
+      title: 'Basisverzeichnis auswählen',
+      description:
+        'Wähle das übergeordnete Verzeichnis, in dem dein neues Projekt erstellt werden soll',
       initialPath: projectPath || undefined,
     });
 
@@ -323,7 +324,7 @@ export function InterviewView() {
       const api = getElectronAPI();
       // Use platform-specific path separator
       const pathSep =
-        typeof window !== 'undefined' && (window as any).electronAPI
+        typeof window !== 'undefined' && (window as Window & { electronAPI?: unknown }).electronAPI
           ? navigator.platform.indexOf('Win') !== -1
             ? '\\'
             : '/'
@@ -333,8 +334,8 @@ export function InterviewView() {
       // Create project directory
       const mkdirResult = await api.mkdir(fullProjectPath);
       if (!mkdirResult.success) {
-        toast.error('Failed to create project directory', {
-          description: mkdirResult.error || 'Unknown error occurred',
+        toast.error('Projektverzeichnis konnte nicht erstellt werden', {
+          description: mkdirResult.error || 'Unbekannter Fehler aufgetreten',
         });
         setIsGenerating(false);
         return;
@@ -403,11 +404,11 @@ export function InterviewView() {
           </Button>
           <Sparkles className="w-5 h-5 text-primary" />
           <div>
-            <h1 className="text-xl font-bold">New Project Interview</h1>
+            <h1 className="text-xl font-bold">Neues Projekt Interview</h1>
             <p className="text-sm text-muted-foreground">
               {isComplete
-                ? 'Specification generated!'
-                : `Question ${currentQuestionIndex + 1} of ${INTERVIEW_QUESTIONS.length}`}
+                ? 'Spezifikation erstellt!'
+                : `Frage ${currentQuestionIndex + 1} von ${INTERVIEW_QUESTIONS.length}`}
             </p>
           </div>
         </div>
@@ -492,7 +493,7 @@ export function InterviewView() {
               <CardContent className="p-3">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-sm text-primary">Generating specification...</span>
+                  <span className="text-sm text-primary">Spezifikation wird erstellt...</span>
                 </div>
               </CardContent>
             </Card>
@@ -506,17 +507,17 @@ export function InterviewView() {
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-semibold">Create Your Project</h3>
+                  <h3 className="text-lg font-semibold">Dein Projekt erstellen</h3>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label htmlFor="project-name" className="text-sm font-medium text-zinc-300">
-                      Project Name
+                      Projektname
                     </label>
                     <Input
                       id="project-name"
-                      placeholder="my-awesome-project"
+                      placeholder="mein-tolles-projekt"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
                       className="bg-zinc-950/50 border-white/10 text-white placeholder:text-zinc-500"
@@ -526,12 +527,12 @@ export function InterviewView() {
 
                   <div className="space-y-2">
                     <label htmlFor="project-path" className="text-sm font-medium text-zinc-300">
-                      Parent Directory
+                      Übergeordnetes Verzeichnis
                     </label>
                     <div className="flex gap-2">
                       <Input
                         id="project-path"
-                        placeholder="/path/to/projects"
+                        placeholder="/pfad/zu/projekten"
                         value={projectPath}
                         onChange={(e) => setProjectPath(e.target.value)}
                         className="flex-1 bg-zinc-950/50 border-white/10 text-white placeholder:text-zinc-500"
@@ -543,7 +544,7 @@ export function InterviewView() {
                         className="bg-white/5 hover:bg-white/10 text-white border border-white/10"
                         data-testid="interview-browse-directory"
                       >
-                        Browse
+                        Durchsuchen
                       </Button>
                     </div>
                   </div>
@@ -551,7 +552,7 @@ export function InterviewView() {
                   {/* Preview of generated spec */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-zinc-300">
-                      Generated Specification Preview
+                      Vorschau der Spezifikation
                     </label>
                     <div
                       className="bg-zinc-950/50 border border-white/10 rounded-md p-3 max-h-48 overflow-y-auto"
@@ -572,12 +573,12 @@ export function InterviewView() {
                     {isGenerating ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating...
+                        Wird erstellt...
                       </>
                     ) : (
                       <>
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        Create Project
+                        Projekt erstellen
                       </>
                     )}
                   </Button>
@@ -594,7 +595,7 @@ export function InterviewView() {
           <div className="flex gap-2">
             <Input
               ref={inputRef}
-              placeholder="Type your answer..."
+              placeholder="Gib deine Antwort ein..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}

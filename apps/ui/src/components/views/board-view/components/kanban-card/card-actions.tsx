@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses dynamic event handlers with complex prop types
 import { Feature } from '@/store/app-store';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,12 +35,12 @@ interface CardActionsProps {
 export function CardActions({
   feature,
   isCurrentAutoTask,
-  hasContext,
+  hasContext: _hasContext,
   shortcutKey,
   isSelectionMode = false,
   onEdit,
   onViewOutput,
-  onVerify,
+  onVerify: _onVerify,
   onResume,
   onForceStop,
   onManualVerify,

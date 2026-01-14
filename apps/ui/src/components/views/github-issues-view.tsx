@@ -31,8 +31,7 @@ export function GitHubIssuesView() {
   // Model override for validation
   const validationModelOverride = useModelOverride({ phase: 'validationModel' });
 
-  // Extract model string for API calls (backward compatibility)
-  const validationModelString = validationModelOverride.effectiveModel;
+  // Note: validationModelOverride.effectiveModel is used via validationModelOverride passed to IssueDetailPanel
 
   const { openIssues, closedIssues, loading, refreshing, error, refresh } = useGithubIssues();
 

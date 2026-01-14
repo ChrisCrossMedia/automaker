@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses dnd-kit and complex styling logic
 import React, { memo, useLayoutEffect, useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';

@@ -68,6 +68,82 @@ export type ThemeMode =
 /** PlanningMode - Planning levels for feature generation workflows */
 export type PlanningMode = 'skip' | 'lite' | 'spec' | 'full';
 
+/**
+ * LLMMode - Determines which LLM backend to use for AI operations
+ *
+ * - cloud: Use cloud-based LLMs (Claude API) for all operations
+ * - local: Use locally installed LLMs (via Ollama) for all operations
+ * - mixed: Use local LLMs for simple tasks, cloud LLMs for complex tasks
+ */
+export type LLMMode = 'cloud' | 'local' | 'mixed';
+
+/**
+ * LocalPhaseModelConfig - Configuration for local LLM models per phase
+ *
+ * Similar to PhaseModelConfig but for locally installed Ollama models.
+ * Each phase can have a specific local model assigned.
+ */
+export interface LocalPhaseModelConfig {
+  // Quick tasks - recommend fast local models
+  /** Local model for enhancing feature names and descriptions */
+  enhancementModel: string;
+  /** Local model for generating file context descriptions */
+  fileDescriptionModel: string;
+  /** Local model for analyzing and describing context images */
+  imageDescriptionModel: string;
+
+  // Validation tasks - recommend capable local models
+  /** Local model for validating and improving GitHub issues */
+  validationModel: string;
+
+  // Generation tasks - recommend powerful local models
+  /** Local model for generating full application specifications */
+  specGenerationModel: string;
+  /** Local model for creating features from specifications */
+  featureGenerationModel: string;
+  /** Local model for reorganizing and prioritizing backlog */
+  backlogPlanningModel: string;
+  /** Local model for analyzing project structure */
+  projectAnalysisModel: string;
+  /** Local model for AI suggestions (feature, refactoring, security, performance) */
+  suggestionsModel: string;
+
+  // Memory tasks
+  /** Local model for extracting learnings from completed agent sessions */
+  memoryExtractionModel: string;
+}
+
+/**
+ * TaskComplexity - Complexity level for mixed-mode task routing
+ *
+ * Used to determine whether a task should use local or cloud LLM in mixed mode.
+ */
+export type TaskComplexity = 'simple' | 'medium' | 'complex';
+
+/**
+ * MixedModeConfig - Configuration for mixed LLM mode
+ *
+ * Defines which task types should use local vs cloud LLMs.
+ */
+export interface MixedModeConfig {
+  /** Use local LLM for enhancement tasks (titles, descriptions) */
+  localForEnhancement: boolean;
+  /** Use local LLM for file descriptions */
+  localForFileDescription: boolean;
+  /** Use local LLM for image descriptions */
+  localForImageDescription: boolean;
+  /** Use local LLM for validation tasks */
+  localForValidation: boolean;
+  /** Use local LLM for memory extraction */
+  localForMemoryExtraction: boolean;
+  /** Always use cloud LLM for spec generation (complex) */
+  cloudForSpecGeneration: boolean;
+  /** Always use cloud LLM for feature generation (complex) */
+  cloudForFeatureGeneration: boolean;
+  /** Always use cloud LLM for backlog planning (complex) */
+  cloudForBacklogPlanning: boolean;
+}
+
 /** ThinkingLevel - Extended thinking levels for Claude models (reasoning intensity) */
 export type ThinkingLevel = 'none' | 'low' | 'medium' | 'high' | 'ultrathink';
 
@@ -506,6 +582,44 @@ export interface GlobalSettings {
    * Value: agent configuration
    */
   customSubagents?: Record<string, import('./provider.js').AgentDefinition>;
+
+  // MEGABRAIN 8 Integration Settings
+  /** Enable MEGABRAIN 8 integration */
+  megabrainEnabled?: boolean;
+  /** MEGABRAIN API URL (default: http://192.168.10.1:8081) */
+  megabrainApiUrl?: string;
+  /** MEGABRAIN WebSocket URL (default: ws://192.168.10.1:8082) */
+  megabrainWsUrl?: string;
+  /** Enable RAG (Retrieval Augmented Generation) from VDB */
+  megabrainRagEnabled?: boolean;
+  /** Enable Skills execution via MEGABRAIN */
+  megabrainSkillsEnabled?: boolean;
+  /** Enable Advocatus Diaboli workflow (100/100 review before implementation) */
+  megabrainAdvocatusEnabled?: boolean;
+
+  // VDB (Vector Database) Settings
+  /** Qdrant VDB URL (default: http://192.168.10.1:6333) */
+  vdbUrl?: string;
+  /** Default VDB collection name */
+  vdbCollection?: string;
+
+  // Privacy Guard Settings
+  /** Enable Privacy Guard for local anonymization */
+  privacyGuardEnabled?: boolean;
+  /** Ollama model for Privacy Guard */
+  privacyGuardModel?: string;
+  /** Ollama URL for Privacy Guard */
+  privacyGuardOllamaUrl?: string;
+
+  // LLM Mode Settings
+  /** LLM mode: cloud, local, or mixed (default: cloud) */
+  llmMode?: LLMMode;
+  /** Local LLM configuration for each phase (used in local and mixed modes) */
+  localPhaseModels?: LocalPhaseModelConfig;
+  /** Mixed mode configuration (which tasks use local vs cloud) */
+  mixedModeConfig?: MixedModeConfig;
+  /** Ollama URL for local LLM operations (default: http://localhost:11434) */
+  ollamaUrl?: string;
 }
 
 /**
@@ -653,6 +767,49 @@ export const DEFAULT_PHASE_MODELS: PhaseModelConfig = {
   memoryExtractionModel: { model: 'haiku' },
 };
 
+/**
+ * Default local phase model configuration for Ollama
+ * Optimized for systems with 6-8GB available for LLMs
+ */
+export const DEFAULT_LOCAL_PHASE_MODELS: LocalPhaseModelConfig = {
+  // Quick tasks - use small, fast models (~2GB)
+  enhancementModel: 'qwen2.5:3b',
+  fileDescriptionModel: 'qwen2.5:3b',
+  imageDescriptionModel: 'moondream', // Specialized vision model (~1.5GB)
+
+  // Validation - use capable models with reasoning (~4.5GB)
+  validationModel: 'qwen2.5:7b',
+
+  // Generation - use code-optimized models (~4.5GB)
+  // qwen2.5-coder:7b is best for coding tasks on limited memory
+  specGenerationModel: 'qwen2.5-coder:7b',
+  featureGenerationModel: 'qwen2.5-coder:7b',
+  backlogPlanningModel: 'qwen2.5:7b',
+  projectAnalysisModel: 'qwen2.5:7b',
+  suggestionsModel: 'qwen2.5-coder:7b',
+
+  // Memory - use fast model for extraction (~2GB)
+  memoryExtractionModel: 'qwen2.5:3b',
+};
+
+/**
+ * Default mixed mode configuration
+ * Local LLMs for simple tasks, Cloud LLMs for complex tasks
+ */
+export const DEFAULT_MIXED_MODE_CONFIG: MixedModeConfig = {
+  // Simple tasks -> Local LLM (saves API costs)
+  localForEnhancement: true,
+  localForFileDescription: true,
+  localForImageDescription: true,
+  localForValidation: false, // Needs better reasoning
+  localForMemoryExtraction: true,
+
+  // Complex tasks -> Cloud LLM (better quality)
+  cloudForSpecGeneration: true,
+  cloudForFeatureGeneration: true,
+  cloudForBacklogPlanning: true,
+};
+
 /** Current version of the global settings schema */
 export const SETTINGS_VERSION = 4;
 /** Current version of the credentials schema */
@@ -732,6 +889,26 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   skillsSources: ['user', 'project'],
   enableSubagents: true,
   subagentsSources: ['user', 'project'],
+  // MEGABRAIN 8 defaults (Ports 8081/8082 to avoid conflicts)
+  // MEGABRAIN API läuft auf dem Host-Mac, nicht auf 192.168.10.1!
+  megabrainEnabled: false,
+  megabrainApiUrl: 'http://localhost:8081',
+  megabrainWsUrl: 'ws://localhost:8082',
+  megabrainRagEnabled: true,
+  megabrainSkillsEnabled: true,
+  megabrainAdvocatusEnabled: true,
+  // VDB defaults
+  vdbUrl: 'http://192.168.10.1:6333',
+  vdbCollection: 'automaker_knowledge',
+  // Privacy Guard defaults
+  privacyGuardEnabled: false,
+  privacyGuardModel: 'qwen2.5:7b',
+  privacyGuardOllamaUrl: 'http://localhost:11434',
+  // LLM Mode defaults
+  llmMode: 'cloud',
+  localPhaseModels: DEFAULT_LOCAL_PHASE_MODELS,
+  mixedModeConfig: DEFAULT_MIXED_MODE_CONFIG,
+  ollamaUrl: 'http://localhost:11434',
 };
 
 /** Default credentials (empty strings - user must provide API keys) */

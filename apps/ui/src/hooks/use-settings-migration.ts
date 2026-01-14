@@ -48,18 +48,13 @@ interface MigrationState {
   error: string | null;
 }
 
-/**
- * localStorage keys that may contain settings to migrate
- */
-const LOCALSTORAGE_KEYS = [
-  'automaker-storage',
-  'automaker-setup',
-  'worktree-panel-collapsed',
-  'file-browser-recent-folders',
-  'automaker:lastProjectDir',
-] as const;
-
 // NOTE: We intentionally do NOT clear any localStorage keys after migration.
+// localStorage keys that may contain settings to migrate:
+// - 'automaker-storage'
+// - 'automaker-setup'
+// - 'worktree-panel-collapsed'
+// - 'file-browser-recent-folders'
+// - 'automaker:lastProjectDir'
 // This allows users to switch back to older versions of Automaker that relied on localStorage.
 // The `localStorageMigrated` flag in server settings prevents re-migration on subsequent app loads.
 
@@ -589,6 +584,32 @@ export function hydrateStoreFromSettings(settings: GlobalSettings): void {
     worktreePanelCollapsed: settings.worktreePanelCollapsed ?? false,
     lastProjectDir: settings.lastProjectDir ?? '',
     recentFolders: settings.recentFolders ?? [],
+    // MEGABRAIN 8 Settings (API läuft auf Host-Mac, nicht 192.168.10.1!)
+    megabrainEnabled:
+      ((settings as unknown as Record<string, unknown>).megabrainEnabled as boolean) ?? false,
+    megabrainApiUrl:
+      ((settings as unknown as Record<string, unknown>).megabrainApiUrl as string) ??
+      'http://localhost:8081',
+    megabrainWsUrl:
+      ((settings as unknown as Record<string, unknown>).megabrainWsUrl as string) ??
+      'ws://localhost:8082',
+    megabrainRagEnabled:
+      ((settings as unknown as Record<string, unknown>).megabrainRagEnabled as boolean) ?? false,
+    megabrainSkillsEnabled:
+      ((settings as unknown as Record<string, unknown>).megabrainSkillsEnabled as boolean) ?? true,
+    megabrainAdvocatusEnabled:
+      ((settings as unknown as Record<string, unknown>).megabrainAdvocatusEnabled as boolean) ??
+      false,
+    // Privacy Guard
+    privacyGuardEnabled:
+      ((settings as unknown as Record<string, unknown>).privacyGuardEnabled as boolean) ?? true,
+    // VDB Settings
+    vdbUrl:
+      ((settings as unknown as Record<string, unknown>).vdbUrl as string) ??
+      'http://192.168.10.1:6333',
+    vdbCollection:
+      ((settings as unknown as Record<string, unknown>).vdbCollection as string) ??
+      'automaker_knowledge',
   });
 
   // Hydrate setup wizard state from global settings (API-backed)
@@ -639,6 +660,18 @@ function buildSettingsUpdateFromStore(): Record<string, unknown> {
     worktreePanelCollapsed: state.worktreePanelCollapsed,
     lastProjectDir: state.lastProjectDir,
     recentFolders: state.recentFolders,
+    // MEGABRAIN 8 Settings
+    megabrainEnabled: state.megabrainEnabled,
+    megabrainApiUrl: state.megabrainApiUrl,
+    megabrainWsUrl: state.megabrainWsUrl,
+    megabrainRagEnabled: state.megabrainRagEnabled,
+    megabrainSkillsEnabled: state.megabrainSkillsEnabled,
+    megabrainAdvocatusEnabled: state.megabrainAdvocatusEnabled,
+    // Privacy Guard
+    privacyGuardEnabled: state.privacyGuardEnabled,
+    // VDB Settings
+    vdbUrl: state.vdbUrl,
+    vdbCollection: state.vdbCollection,
   };
 }
 

@@ -18,7 +18,6 @@ interface UseBoardDragDropProps {
 
 export function useBoardDragDrop({
   features,
-  currentProject,
   runningAutoTasks,
   persistFeatureUpdate,
   handleStartImplementation,

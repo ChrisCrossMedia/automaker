@@ -1,5 +1,13 @@
 import { useMemo } from 'react';
-import { DndContext, DragOverlay } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  type DragStartEvent,
+  type DragEndEvent,
+  type CollisionDetection,
+  type SensorDescriptor,
+  type SensorOptions,
+} from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { KanbanColumn, KanbanCard, EmptyStateCard } from './components';
@@ -10,10 +18,10 @@ import { getColumnsWithPipeline, type ColumnId } from './constants';
 import type { PipelineConfig } from '@automaker/types';
 
 interface KanbanBoardProps {
-  sensors: any;
-  collisionDetectionStrategy: (args: any) => any;
-  onDragStart: (event: any) => void;
-  onDragEnd: (event: any) => void;
+  sensors: SensorDescriptor<SensorOptions>[];
+  collisionDetectionStrategy: CollisionDetection;
+  onDragStart: (event: DragStartEvent) => void;
+  onDragEnd: (event: DragEndEvent) => void;
   activeFeature: Feature | null;
   getColumnFeatures: (columnId: ColumnId) => Feature[];
   backgroundImageStyle: React.CSSProperties;

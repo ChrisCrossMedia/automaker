@@ -3,12 +3,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useAppStore, Feature } from '@/store/app-store';
 import { GraphView } from './graph-view';
 import { EditFeatureDialog, AddFeatureDialog, AgentOutputModal } from './board-view/dialogs';
-import {
-  useBoardFeatures,
-  useBoardActions,
-  useBoardBackground,
-  useBoardPersistence,
-} from './board-view/hooks';
+import { useBoardFeatures, useBoardActions, useBoardPersistence } from './board-view/hooks';
 import { useAutoMode } from '@/hooks/use-auto-mode';
 import { pathsEqual } from '@/lib/utils';
 import { RefreshCw } from 'lucide-react';
@@ -142,11 +137,11 @@ export function GraphViewPage() {
     currentProject,
   });
 
-  // Follow-up state (simplified for graph view)
-  const [followUpFeature, setFollowUpFeature] = useState<Feature | null>(null);
-  const [followUpPrompt, setFollowUpPrompt] = useState('');
-  const [followUpImagePaths, setFollowUpImagePaths] = useState<any[]>([]);
-  const [followUpPreviewMap, setFollowUpPreviewMap] = useState<Map<string, string>>(new Map());
+  // Follow-up state (simplified for graph view) - used by useBoardActions
+  const [_followUpFeature, setFollowUpFeature] = useState<Feature | null>(null);
+  const [_followUpPrompt, setFollowUpPrompt] = useState('');
+  const [_followUpImagePaths, setFollowUpImagePaths] = useState<string[]>([]);
+  const [, setFollowUpPreviewMap] = useState<Map<string, string>>(new Map());
 
   // In-progress features for shortcuts
   const inProgressFeaturesForShortcuts = useMemo(() => {
@@ -178,9 +173,9 @@ export function GraphViewPage() {
     setEditingFeature,
     setShowOutputModal,
     setOutputFeature,
-    followUpFeature,
-    followUpPrompt,
-    followUpImagePaths,
+    followUpFeature: _followUpFeature,
+    followUpPrompt: _followUpPrompt,
+    followUpImagePaths: _followUpImagePaths,
     setFollowUpFeature,
     setFollowUpPrompt,
     setFollowUpImagePaths,

@@ -386,7 +386,13 @@ export function PhaseModelSelector({
   }, [dynamicOpencodeModels]);
 
   // Group models
-  const { favorites, claude, cursor, codex, opencode } = useMemo(() => {
+  const {
+    favorites,
+    claude,
+    cursor: _cursor,
+    codex,
+    opencode,
+  } = useMemo(() => {
     const favs: typeof CLAUDE_MODELS = [];
     const cModels: typeof CLAUDE_MODELS = [];
     const curModels: typeof CURSOR_MODELS = [];
@@ -1192,7 +1198,7 @@ export function PhaseModelSelector({
 
           {opencodeSections.length > 0 && (
             <CommandGroup heading={OPENCODE_CLI_GROUP_LABEL}>
-              {opencodeSections.map((section, sectionIndex) => (
+              {opencodeSections.map((section) => (
                 <Fragment key={section.key}>
                   <div className="px-2 pt-2 text-xs font-medium text-muted-foreground">
                     {section.label}

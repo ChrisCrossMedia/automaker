@@ -73,15 +73,30 @@ services:
         echo 'Fixing node_modules permissions...'
         chown -R automaker:automaker /app/node_modules 2>/dev/null || true
 
+        # Setup Claude OAuth credentials if provided
+        if [ -n "$CLAUDE_OAUTH_CREDENTIALS" ]; then
+          echo 'Setting up Claude OAuth credentials...'
+          mkdir -p /home/automaker/.claude
+          echo "$CLAUDE_OAUTH_CREDENTIALS" > /home/automaker/.claude/.credentials.json
+          chmod 600 /home/automaker/.claude/.credentials.json
+          chown -R automaker:automaker /home/automaker/.claude
+        fi
+
         # Run the rest as automaker user
         exec gosu automaker sh -c "
-          echo 'Installing dependencies...' &&
-          npm install &&
+          echo 'Cleaning platform-specific packages...' &&
+          rm -rf /app/node_modules/*-darwin-* /app/node_modules/*-win32-* 2>/dev/null || true &&
+          rm -rf /app/node_modules/.package-lock.json 2>/dev/null || true &&
+          echo 'Installing dependencies for Linux...' &&
+          npm install --force &&
           echo 'Building shared packages...' &&
           npm run build:packages &&
           echo 'Starting server in development mode...' &&
           npm run _dev:server
         "
+    # Allow container to access host services (MEGABRAIN on port 8081)
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3008/api/health']
       interval: 10s

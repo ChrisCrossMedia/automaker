@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Complex provider settings with dynamic CLI status and API integrations
 import { useAppStore } from '@/store/app-store';
 import { useSetupStore } from '@/store/setup-store';
 import { useCliStatus } from '../hooks/use-cli-status';

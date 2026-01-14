@@ -11,11 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { AlertCircle } from 'lucide-react';
-import { modelSupportsThinking } from '@/lib/utils';
 import { Feature, ModelAlias, ThinkingLevel, PlanningMode } from '@/store/app-store';
 import { TestingTabContent, PrioritySelect, PlanningModeSelect } from '../shared';
 import { PhaseModelSelector } from '@/components/views/settings-view/model-defaults/phase-model-selector';
-import { isCursorModel, isClaudeModel, type PhaseModelEntry } from '@automaker/types';
+import { isClaudeModel, type PhaseModelEntry } from '@automaker/types';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -166,8 +165,6 @@ export function MassEditDialog({ open, onClose, selectedFeatures, onApply }: Mas
   };
 
   const hasAnyApply = Object.values(applyState).some(Boolean);
-  const isCurrentModelCursor = isCursorModel(model);
-  const modelAllowsThinking = !isCurrentModelCursor && modelSupportsThinking(model);
   const modelSupportsPlanningMode = isClaudeModel(model);
 
   return (

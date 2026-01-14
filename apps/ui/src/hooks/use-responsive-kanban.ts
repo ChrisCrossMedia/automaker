@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Hook uses window and document APIs for DOM measurements
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
 

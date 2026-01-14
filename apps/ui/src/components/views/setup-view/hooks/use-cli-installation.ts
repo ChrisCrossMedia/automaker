@@ -4,12 +4,27 @@ import { createLogger } from '@automaker/utils/logger';
 
 const logger = createLogger('CliInstallation');
 
+interface CliStatus {
+  installed?: boolean;
+}
+
+interface InstallResult {
+  success: boolean;
+  error?: string;
+}
+
+interface ProgressEvent {
+  cli?: string;
+  data?: string;
+  type?: string;
+}
+
 interface UseCliInstallationOptions {
   cliType: 'claude';
-  installApi: () => Promise<any>;
-  onProgressEvent?: (callback: (progress: any) => void) => (() => void) | undefined;
+  installApi: () => Promise<InstallResult>;
+  onProgressEvent?: (callback: (progress: ProgressEvent) => void) => (() => void) | undefined;
   onSuccess?: () => void;
-  getStoreState?: () => any;
+  getStoreState?: () => CliStatus | null;
 }
 
 export function useCliInstallation({
@@ -32,15 +47,13 @@ export function useCliInstallation({
       let unsubscribe: (() => void) | undefined;
 
       if (onProgressEvent) {
-        unsubscribe = onProgressEvent(
-          (progress: { cli?: string; data?: string; type?: string }) => {
-            if (progress.cli === cliType) {
-              setInstallProgress((prev) => ({
-                output: [...prev.output, progress.data || progress.type || ''],
-              }));
-            }
+        unsubscribe = onProgressEvent((progress: ProgressEvent) => {
+          if (progress.cli === cliType) {
+            setInstallProgress((prev) => ({
+              output: [...prev.output, progress.data || progress.type || ''],
+            }));
           }
-        );
+        });
       }
 
       const result = await installApi();

@@ -7,8 +7,8 @@ interface SettingsHeaderProps {
 }
 
 export function SettingsHeader({
-  title = 'Settings',
-  description = 'Configure your API keys and preferences',
+  title = 'Einstellungen',
+  description = 'API-Schlüssel und Präferenzen konfigurieren',
 }: SettingsHeaderProps) {
   return (
     <div

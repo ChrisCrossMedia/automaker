@@ -74,14 +74,15 @@ export function TrashDialog({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="bg-popover/95 backdrop-blur-xl border-border max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Recycle Bin</DialogTitle>
+            <DialogTitle>Papierkorb</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Restore projects to the sidebar or delete their folders using your system Trash.
+              Stelle Projekte in der Seitenleiste wieder her oder lösche deren Ordner mit dem
+              System-Papierkorb.
             </DialogDescription>
           </DialogHeader>
 
           {trashedProjects.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Recycle bin is empty.</p>
+            <p className="text-sm text-muted-foreground">Papierkorb ist leer.</p>
           ) : (
             <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
               {trashedProjects.map((project) => (
@@ -93,7 +94,7 @@ export function TrashDialog({
                     <p className="text-sm font-medium text-foreground truncate">{project.name}</p>
                     <p className="text-xs text-muted-foreground break-all">{project.path}</p>
                     <p className="text-[11px] text-muted-foreground/80">
-                      Trashed {new Date(project.trashedAt).toLocaleString()}
+                      Gelöscht am {new Date(project.trashedAt).toLocaleString()}
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 shrink-0">
@@ -104,7 +105,7 @@ export function TrashDialog({
                       data-testid={`restore-project-${project.id}`}
                     >
                       <Undo2 className="h-3.5 w-3.5 mr-1.5" />
-                      Restore
+                      Wiederherstellen
                     </Button>
                     <Button
                       size="sm"
@@ -114,7 +115,7 @@ export function TrashDialog({
                       data-testid={`delete-project-disk-${project.id}`}
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                      {activeTrashId === project.id ? 'Deleting...' : 'Delete from disk'}
+                      {activeTrashId === project.id ? 'Wird gelöscht...' : 'Von Festplatte löschen'}
                     </Button>
                     <Button
                       size="sm"
@@ -124,7 +125,7 @@ export function TrashDialog({
                       data-testid={`remove-project-${project.id}`}
                     >
                       <X className="h-3.5 w-3.5 mr-1.5" />
-                      Remove from list
+                      Aus Liste entfernen
                     </Button>
                   </div>
                 </div>
@@ -134,7 +135,7 @@ export function TrashDialog({
 
           <DialogFooter className="flex justify-between">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Close
+              Schließen
             </Button>
             {trashedProjects.length > 0 && (
               <Button
@@ -143,7 +144,7 @@ export function TrashDialog({
                 disabled={isEmptyingTrash}
                 data-testid="empty-trash"
               >
-                {isEmptyingTrash ? 'Clearing...' : 'Empty Recycle Bin'}
+                {isEmptyingTrash ? 'Wird geleert...' : 'Papierkorb leeren'}
               </Button>
             )}
           </DialogFooter>
@@ -156,9 +157,9 @@ export function TrashDialog({
           open
           onOpenChange={(isOpen) => !isOpen && setDeleteFromDiskProject(null)}
           onConfirm={onConfirmDeleteFromDisk}
-          title={`Delete "${deleteFromDiskProject.name}" from disk?`}
-          description="This sends the folder to your system Trash."
-          confirmText="Delete from disk"
+          title={`"${deleteFromDiskProject.name}" von Festplatte löschen?`}
+          description="Dies verschiebt den Ordner in den System-Papierkorb."
+          confirmText="Von Festplatte löschen"
           testId="delete-from-disk-confirm-dialog"
           confirmTestId="confirm-delete-from-disk-button"
         />
@@ -169,9 +170,9 @@ export function TrashDialog({
         open={showEmptyTrashConfirm}
         onOpenChange={setShowEmptyTrashConfirm}
         onConfirm={onConfirmEmptyTrash}
-        title="Empty Recycle Bin"
-        description="Clear all projects from recycle bin? This does not delete folders from disk."
-        confirmText="Empty"
+        title="Papierkorb leeren"
+        description="Alle Projekte aus dem Papierkorb entfernen? Die Ordner auf der Festplatte werden nicht gelöscht."
+        confirmText="Leeren"
         confirmVariant="destructive"
         icon={Trash2}
         iconClassName="text-destructive"

@@ -17,7 +17,7 @@ export function Markdown({ children, className }: MarkdownProps) {
   return (
     <div
       className={cn(
-        'prose prose-sm prose-invert max-w-none',
+        'prose prose-sm prose-invert max-w-none overflow-hidden break-words',
         // Headings
         '[&_h1]:text-xl [&_h1]:text-foreground [&_h1]:font-semibold [&_h1]:mt-4 [&_h1]:mb-2',
         '[&_h2]:text-lg [&_h2]:text-foreground [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2',

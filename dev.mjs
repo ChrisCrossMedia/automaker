@@ -28,6 +28,7 @@ import {
   prompt,
   launchDockerDevContainers,
   launchDockerDevServerContainer,
+  startMegabrain8,
 } from './scripts/launcher-utils.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -103,6 +104,10 @@ async function main() {
       console.log('');
       log('Launching Web Application (Development Mode)...', 'blue');
 
+      // Start MEGABRAIN 8 before server (runs on host)
+      await startMegabrain8(processes);
+      console.log('');
+
       // Build shared packages once
       log('Building shared packages...', 'blue');
       await runNpmAndWait(['run', 'build:packages'], { stdio: 'inherit' }, __dirname);
@@ -148,6 +153,10 @@ async function main() {
       console.log('');
       log('Launching Desktop Application (Development Mode)...', 'blue');
       log('(Electron will start its own backend server)', 'yellow');
+      console.log('');
+
+      // Start MEGABRAIN 8 before Electron (runs on host)
+      await startMegabrain8(processes);
       console.log('');
 
       // Pass selected ports through to Vite + Electron backend

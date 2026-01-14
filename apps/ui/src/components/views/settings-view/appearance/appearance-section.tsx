@@ -34,19 +34,19 @@ export function AppearanceSection({
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-600/10 flex items-center justify-center border border-brand-500/20">
             <Palette className="w-5 h-5 text-brand-500" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground tracking-tight">Appearance</h2>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">Erscheinungsbild</h2>
         </div>
         <p className="text-sm text-muted-foreground/80 ml-12">
-          Customize the look and feel of your application.
+          Aussehen und Stil der Anwendung anpassen.
         </p>
       </div>
       <div className="p-6 space-y-4">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-foreground font-medium">
-              Theme{' '}
+              Design{' '}
               <span className="text-muted-foreground font-normal">
-                {currentProject ? `(for ${currentProject.name})` : '(Global)'}
+                {currentProject ? `(für ${currentProject.name})` : '(Global)'}
               </span>
             </Label>
             {/* Dark/Light Tabs */}
@@ -61,7 +61,7 @@ export function AppearanceSection({
                 )}
               >
                 <Moon className="w-3.5 h-3.5" />
-                Dark
+                Dunkel
               </button>
               <button
                 onClick={() => setActiveTab('light')}
@@ -73,7 +73,7 @@ export function AppearanceSection({
                 )}
               >
                 <Sun className="w-3.5 h-3.5" />
-                Light
+                Hell
               </button>
             </div>
           </div>

@@ -30,6 +30,9 @@ import {
   getSubagentsConfiguration,
   getCustomSubagents,
 } from '../lib/settings-helpers.js';
+import { PrivacyGuard } from './privacy-guard-service.js';
+import { VDBRagService } from './vdb-rag-service.js';
+import { MegabrainService } from './megabrain-service.js';
 
 interface Message {
   id: string;
@@ -63,6 +66,7 @@ interface Session {
   reasoningEffort?: ReasoningEffort; // Reasoning effort for Codex models
   sdkSessionId?: string; // Claude SDK session ID for conversation continuity
   promptQueue: QueuedPrompt[]; // Queue of prompts to auto-run after current task
+  privacyGuardEnabled?: boolean; // Whether to anonymize/deanonymize messages
 }
 
 interface SessionMetadata {
@@ -151,6 +155,9 @@ export class AgentService {
     model,
     thinkingLevel,
     reasoningEffort,
+    privacyGuardEnabled,
+    expertsEnabled,
+    ragEnabled,
   }: {
     sessionId: string;
     message: string;
@@ -159,6 +166,9 @@ export class AgentService {
     model?: string;
     thinkingLevel?: ThinkingLevel;
     reasoningEffort?: ReasoningEffort;
+    privacyGuardEnabled?: boolean;
+    expertsEnabled?: boolean;
+    ragEnabled?: boolean;
   }) {
     const session = this.sessions.get(sessionId);
     if (!session) {
@@ -181,6 +191,11 @@ export class AgentService {
     }
     if (reasoningEffort !== undefined) {
       session.reasoningEffort = reasoningEffort;
+    }
+
+    // Store privacy guard setting in session for response deanonymization
+    if (privacyGuardEnabled !== undefined) {
+      session.privacyGuardEnabled = privacyGuardEnabled;
     }
 
     // Validate vision support before processing images
@@ -212,11 +227,70 @@ export class AgentService {
       }
     }
 
+    // Anonymize message if privacy guard is enabled
+    let processedMessage = message;
+    if (session.privacyGuardEnabled) {
+      try {
+        processedMessage = await PrivacyGuard.anonymize(sessionId, message);
+        if (processedMessage !== message) {
+          this.logger.info(
+            `Privacy Guard: Nachricht anonymisiert (Session: ${sessionId.substring(0, 8)}...)`
+          );
+        }
+      } catch (error) {
+        this.logger.error('Privacy Guard anonymization failed:', error);
+        // Continue with original message if anonymization fails
+      }
+    }
+
+    // MEGABRAIN VDB RAG Enhancement - add context from knowledge base
+    // Use explicit ragEnabled from request, or fall back to settings
+    const megabrainSettings = MegabrainService.getSettings();
+    const isRagEnabled = ragEnabled ?? (megabrainSettings.enabled && megabrainSettings.ragEnabled);
+
+    if (isRagEnabled) {
+      try {
+        // Extract keywords from the message for VDB search
+        const keywords = this.extractKeywords(processedMessage);
+        if (keywords.length > 0) {
+          VDBRagService.configure({ enabled: true });
+          const enhancedMessage = await VDBRagService.enhancePrompt(processedMessage, keywords);
+          if (enhancedMessage !== processedMessage) {
+            processedMessage = enhancedMessage;
+            this.logger.info(
+              `MEGABRAIN RAG: Prompt erweitert mit VDB-Kontext (${keywords.length} Keywords)`
+            );
+          }
+        }
+      } catch (error) {
+        this.logger.error('MEGABRAIN RAG enhancement failed:', error);
+        // Continue with original message if RAG fails
+      }
+    }
+
+    // MEGABRAIN Expert Integration - add expert opinions from VDB
+    if (expertsEnabled) {
+      try {
+        VDBRagService.configure({ enabled: true });
+        const experts = await VDBRagService.searchExperts(processedMessage, 3);
+        if (experts.length > 0) {
+          const expertContext = VDBRagService.buildExpertContext(experts);
+          if (expertContext) {
+            processedMessage = `${expertContext}\n\n---\n\n${processedMessage}`;
+            this.logger.info(`MEGABRAIN Experten: ${experts.length} Expertenmeinungen hinzugefügt`);
+          }
+        }
+      } catch (error) {
+        this.logger.error('MEGABRAIN Expert integration failed:', error);
+        // Continue without expert opinions if lookup fails
+      }
+    }
+
     // Add user message
     const userMessage: Message = {
       id: this.generateId(),
       role: 'user',
-      content: message,
+      content: processedMessage,
       images: images.length > 0 ? images : undefined,
       timestamp: new Date().toISOString(),
     };
@@ -446,18 +520,58 @@ export class AgentService {
           }
         } else if (msg.type === 'result') {
           if (msg.subtype === 'success' && msg.result) {
+            // Deanonymize response if privacy guard was enabled
+            let finalResult = msg.result;
+            if (session.privacyGuardEnabled) {
+              try {
+                finalResult = PrivacyGuard.deanonymize(sessionId, msg.result);
+                if (finalResult !== msg.result) {
+                  this.logger.info(
+                    `Privacy Guard: Antwort deanonymisiert (Session: ${sessionId.substring(0, 8)}...)`
+                  );
+                }
+              } catch (error) {
+                this.logger.error('Privacy Guard deanonymization failed:', error);
+              }
+            }
             if (currentAssistantMessage) {
-              currentAssistantMessage.content = msg.result;
-              responseText = msg.result;
+              currentAssistantMessage.content = finalResult;
+              responseText = finalResult;
+            }
+          }
+
+          // Deanonymize stream content for final event
+          let finalContent = responseText;
+          if (session.privacyGuardEnabled) {
+            try {
+              finalContent = PrivacyGuard.deanonymize(sessionId, responseText);
+            } catch (error) {
+              this.logger.error('Privacy Guard deanonymization failed:', error);
             }
           }
 
           this.emitAgentEvent(sessionId, {
             type: 'complete',
             messageId: currentAssistantMessage?.id,
-            content: responseText,
+            content: finalContent,
             toolUses,
           });
+
+          // Self-Learning: Speichere erfolgreiche Interaktionen mit Code-Änderungen
+          if (toolUses && toolUses.length > 0 && finalContent.length > 100) {
+            try {
+              const learningContent = `TASK: ${processedMessage.slice(0, 500)}\n\nLÖSUNG: ${finalContent.slice(0, 2000)}\n\nTOOLS: ${toolUses.map((t) => t.name).join(', ')}`;
+              await VDBRagService.storeLearning(learningContent, {
+                type: 'successful_task',
+                toolsUsed: toolUses.map((t) => t.name),
+                projectPath: session.workingDirectory,
+                sessionId,
+              });
+              this.logger.info('Self-Learning: Erfolgreiche Interaktion gespeichert');
+            } catch (learnError) {
+              this.logger.debug('Self-Learning fehlgeschlagen:', learnError);
+            }
+          }
         } else if (msg.type === 'error') {
           // Some providers (like Codex CLI/SaaS or Cursor CLI) surface failures as
           // streamed error messages instead of throwing. Handle these here so the
@@ -469,11 +583,42 @@ export class AgentService {
 
           const errorInfo = classifyError(new Error(rawErrorText));
 
+          // Self-Learning: Suche nach ähnlichen Fehlern und deren Lösungen
+          let similarSolutions = '';
+          try {
+            const searchResults = await VDBRagService.searchByKeyword(
+              rawErrorText.slice(0, 200),
+              'megabrain_knowledge',
+              3
+            );
+            if (searchResults.length > 0) {
+              const solutions = searchResults
+                .filter(
+                  (r) =>
+                    r.payload['type'] === 'error_solution' ||
+                    String(r.payload['content'] || '').includes('LÖSUNG')
+                )
+                .slice(0, 2);
+              if (solutions.length > 0) {
+                similarSolutions =
+                  '\n\n💡 Ähnliche Lösungen aus der Wissensbasis:\n' +
+                  solutions
+                    .map((s) => `- ${String(s.payload['content'] || '').slice(0, 300)}...`)
+                    .join('\n');
+              }
+            }
+          } catch {
+            // VDB-Suche fehlgeschlagen - ignorieren
+          }
+
           // Keep the provider-supplied text intact (Codex already includes helpful tips),
           // only add a small rate-limit hint when we can detect it.
-          const enhancedText = errorInfo.isRateLimit
+          let enhancedText = errorInfo.isRateLimit
             ? `${rawErrorText}\n\nTip: It looks like you hit a rate limit. Try waiting a bit or reducing concurrent Agent Runner / Auto Mode tasks.`
             : rawErrorText;
+
+          // Füge ähnliche Lösungen hinzu
+          enhancedText += similarSolutions;
 
           this.logger.error('Provider error during agent execution:', {
             type: errorInfo.type,
@@ -932,5 +1077,132 @@ export class AgentService {
 
   private generateId(): string {
     return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+
+  /**
+   * Extract keywords from a message for VDB search
+   * Focuses on technical terms, code-related words, and domain concepts
+   */
+  private extractKeywords(message: string): string[] {
+    // Remove common stop words and extract meaningful terms
+    const stopWords = new Set([
+      'der',
+      'die',
+      'das',
+      'ein',
+      'eine',
+      'und',
+      'oder',
+      'aber',
+      'wenn',
+      'dann',
+      'ist',
+      'sind',
+      'war',
+      'waren',
+      'hat',
+      'haben',
+      'wird',
+      'werden',
+      'kann',
+      'können',
+      'the',
+      'a',
+      'an',
+      'and',
+      'or',
+      'but',
+      'if',
+      'then',
+      'is',
+      'are',
+      'was',
+      'were',
+      'has',
+      'have',
+      'will',
+      'can',
+      'could',
+      'would',
+      'should',
+      'be',
+      'been',
+      'being',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'by',
+      'from',
+      'as',
+      'into',
+      'ich',
+      'du',
+      'er',
+      'sie',
+      'es',
+      'wir',
+      'ihr',
+      'i',
+      'you',
+      'he',
+      'she',
+      'it',
+      'we',
+      'they',
+      'bitte',
+      'please',
+      'danke',
+      'thanks',
+      'ja',
+      'nein',
+      'yes',
+      'no',
+      'mich',
+      'mir',
+      'dir',
+      'ihm',
+      'ihr',
+      'uns',
+      'euch',
+      'ihnen',
+      'this',
+      'that',
+      'these',
+      'those',
+      'what',
+      'which',
+      'who',
+      'how',
+      'why',
+      'when',
+      'where',
+    ]);
+
+    // Split message into words and filter
+    const words = message
+      .toLowerCase()
+      .replace(/[^\w\sÄäÖöÜüß-]/g, ' ')
+      .split(/\s+/)
+      .filter((word) => word.length > 2 && !stopWords.has(word));
+
+    // Get unique words and prioritize technical terms
+    const uniqueWords = [...new Set(words)];
+
+    // Technical patterns get priority
+    const technicalPatterns =
+      /^(api|sdk|cli|ui|vdb|rag|mcp|git|npm|react|vue|node|python|typescript|javascript|database|server|client|component|function|class|method|error|bug|fix|feature|test|config)/i;
+
+    const sortedWords = uniqueWords.sort((a, b) => {
+      const aIsTechnical = technicalPatterns.test(a) ? 1 : 0;
+      const bIsTechnical = technicalPatterns.test(b) ? 1 : 0;
+      return bIsTechnical - aIsTechnical;
+    });
+
+    // Return top 5 keywords
+    return sortedWords.slice(0, 5);
   }
 }

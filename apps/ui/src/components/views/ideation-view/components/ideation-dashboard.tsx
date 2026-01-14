@@ -70,7 +70,7 @@ function SuggestionCard({
               ) : (
                 <>
                   <Plus className="w-4 h-4" />
-                  Accept
+                  Übernehmen
                 </>
               )}
             </Button>
@@ -98,7 +98,7 @@ function GeneratingCard({ job }: { job: GenerationJob }) {
             <div>
               <p className="font-medium">{job.prompt.title}</p>
               <p className="text-sm text-muted-foreground">
-                {isError ? job.error || 'Failed to generate' : 'Generating ideas...'}
+                {isError ? job.error || 'Generierung fehlgeschlagen' : 'Generiere Ideen...'}
               </p>
             </div>
           </div>
@@ -162,7 +162,7 @@ function TagFilter({
           onClick={() => selectedTags.forEach((tag) => onToggleTag(tag))}
           className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          Clear filters
+          Filter löschen
         </button>
       )}
     </div>
@@ -256,10 +256,10 @@ export function IdeationDashboard({ onGenerateIdeas, onAcceptAllReady }: Ideatio
       const result = await api.ideation?.addSuggestionToBoard(currentProject.path, suggestion);
 
       if (result?.success) {
-        toast.success(`Added "${suggestion.title}" to board`);
+        toast.success(`"${suggestion.title}" zum Board hinzugefügt`);
         removeSuggestionFromJob(jobId, suggestion.id);
       } else {
-        toast.error(result?.error || 'Failed to add to board');
+        toast.error(result?.error || 'Konnte nicht zum Board hinzufügen');
       }
     } catch (error) {
       console.error('Failed to add to board:', error);
@@ -271,7 +271,7 @@ export function IdeationDashboard({ onGenerateIdeas, onAcceptAllReady }: Ideatio
 
   const handleRemove = (suggestionId: string, jobId: string) => {
     removeSuggestionFromJob(jobId, suggestionId);
-    toast.info('Idea removed');
+    toast.info('Idee entfernt');
   };
 
   // Accept all filtered suggestions
@@ -304,13 +304,13 @@ export function IdeationDashboard({ onGenerateIdeas, onAcceptAllReady }: Ideatio
     setIsAcceptingAll(false);
 
     if (successCount > 0 && failCount === 0) {
-      toast.success(`Added ${successCount} idea${successCount > 1 ? 's' : ''} to board`);
+      toast.success(`${successCount} Idee${successCount > 1 ? 'n' : ''} zum Board hinzugefügt`);
     } else if (successCount > 0 && failCount > 0) {
       toast.warning(
-        `Added ${successCount} idea${successCount > 1 ? 's' : ''}, ${failCount} failed`
+        `${successCount} Idee${successCount > 1 ? 'n' : ''} hinzugefügt, ${failCount} fehlgeschlagen`
       );
     } else {
-      toast.error('Failed to add ideas to board');
+      toast.error('Konnte Ideen nicht zum Board hinzufügen');
     }
   }, [currentProject?.path, filteredSuggestions, removeSuggestionFromJob]);
 
@@ -327,14 +327,14 @@ export function IdeationDashboard({ onGenerateIdeas, onAcceptAllReady }: Ideatio
   return (
     <div className="flex-1 flex flex-col p-6 overflow-auto">
       <div className="max-w-3xl w-full mx-auto space-y-4">
-        {/* Status text */}
+        {/* Status-Text */}
         {(generatingCount > 0 || allSuggestions.length > 0) && (
           <p className="text-sm text-muted-foreground">
             {generatingCount > 0
-              ? `Generating ${generatingCount} idea${generatingCount > 1 ? 's' : ''}...`
+              ? `Generiere ${generatingCount} Idee${generatingCount > 1 ? 'n' : ''}...`
               : selectedTags.size > 0
-                ? `Showing ${filteredSuggestions.length} of ${allSuggestions.length} ideas`
-                : `${allSuggestions.length} idea${allSuggestions.length > 1 ? 's' : ''} ready for review`}
+                ? `Zeige ${filteredSuggestions.length} von ${allSuggestions.length} Ideen`
+                : `${allSuggestions.length} Idee${allSuggestions.length > 1 ? 'n' : ''} zur Überprüfung bereit`}
           </p>
         )}
 
@@ -373,46 +373,46 @@ export function IdeationDashboard({ onGenerateIdeas, onAcceptAllReady }: Ideatio
           </div>
         )}
 
-        {/* No results after filtering */}
+        {/* Keine Ergebnisse nach Filterung */}
         {filteredSuggestions.length === 0 && allSuggestions.length > 0 && (
           <Card>
             <CardContent className="py-8">
               <div className="text-center text-muted-foreground">
-                <p>No ideas match the selected filters</p>
+                <p>Keine Ideen entsprechen den ausgewählten Filtern</p>
                 <button
                   onClick={() => setSelectedTags(new Set())}
                   className="text-primary hover:underline mt-2"
                 >
-                  Clear filters
+                  Filter löschen
                 </button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Generate More Ideas Button - shown when there are items */}
+        {/* Weitere Ideen generieren Button - wird angezeigt wenn es Items gibt */}
         {!isEmpty && (
           <div className="pt-2">
             <Button onClick={onGenerateIdeas} variant="outline" className="w-full gap-2">
               <Lightbulb className="w-4 h-4" />
-              Generate More Ideas
+              Weitere Ideen generieren
             </Button>
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Leerer Zustand */}
         {isEmpty && (
           <Card>
             <CardContent className="py-16">
               <div className="text-center">
                 <Sparkles className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-medium mb-2">No ideas yet</h3>
+                <h3 className="text-lg font-medium mb-2">Noch keine Ideen</h3>
                 <p className="text-muted-foreground mb-6">
-                  Generate ideas by selecting a category and prompt type
+                  Generiere Ideen, indem du eine Kategorie und einen Prompt-Typ auswählst
                 </p>
                 <Button onClick={onGenerateIdeas} size="lg" className="gap-2">
                   <Lightbulb className="w-5 h-5" />
-                  Generate Ideas
+                  Ideen generieren
                 </Button>
               </div>
             </CardContent>

@@ -1,13 +1,17 @@
-// @ts-nocheck
+// @ts-nocheck - Complex hook with streaming event handling and multiple external dependencies
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Message, StreamEvent } from '@/types/electron';
 import { useMessageQueue } from './use-message-queue';
-import type { ImageAttachment, TextFileAttachment } from '@/store/app-store';
+import { useAppStore, type ImageAttachment, type TextFileAttachment } from '@/store/app-store';
 import { getElectronAPI } from '@/lib/electron';
 import { sanitizeFilename } from '@/lib/image-utils';
 import { createLogger } from '@automaker/utils/logger';
 
 const logger = createLogger('ElectronAgent');
+
+// Maximum number of messages to keep in memory to prevent memory leaks
+// Older messages will be trimmed when this limit is exceeded
+const MAX_MESSAGES_IN_MEMORY = 500;
 
 interface UseElectronAgentOptions {
   sessionId: string;
@@ -81,6 +85,13 @@ export function useElectronAgent({
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const currentMessageRef = useRef<Message | null>(null);
 
+  // Privacy Guard setting
+  const privacyGuardEnabled = useAppStore((s) => s.privacyGuardEnabled);
+
+  // MEGABRAIN settings
+  const megabrainRagEnabled = useAppStore((s) => s.megabrainRagEnabled);
+  const megabrainExpertsEnabled = useAppStore((s) => s.megabrainExpertsEnabled);
+
   // Send message directly to the agent (bypassing queue)
   const sendMessageDirectly = useCallback(
     async (content: string, images?: ImageAttachment[], textFiles?: TextFileAttachment[]) => {
@@ -141,7 +152,10 @@ export function useElectronAgent({
           workingDirectory,
           imagePaths,
           model,
-          thinkingLevel
+          thinkingLevel,
+          privacyGuardEnabled,
+          megabrainExpertsEnabled,
+          megabrainRagEnabled
         );
 
         if (!result.success) {
@@ -157,20 +171,28 @@ export function useElectronAgent({
         throw err;
       }
     },
-    [sessionId, workingDirectory, model, thinkingLevel, isProcessing]
+    [
+      sessionId,
+      workingDirectory,
+      model,
+      thinkingLevel,
+      isProcessing,
+      privacyGuardEnabled,
+      megabrainExpertsEnabled,
+      megabrainRagEnabled,
+    ]
   );
 
   // Message queue for queuing messages when agent is busy
-  const { queuedMessages, isProcessingQueue, addToQueue, clearQueue, processNext } =
-    useMessageQueue({
-      onProcessNext: async (queuedMessage) => {
-        await sendMessageDirectly(
-          queuedMessage.content,
-          queuedMessage.images,
-          queuedMessage.textFiles
-        );
-      },
-    });
+  const { queuedMessages, isProcessingQueue, clearQueue, processNext } = useMessageQueue({
+    onProcessNext: async (queuedMessage) => {
+      await sendMessageDirectly(
+        queuedMessage.content,
+        queuedMessage.images,
+        queuedMessage.textFiles
+      );
+    },
+  });
 
   // Initialize connection and load history
   useEffect(() => {
@@ -265,8 +287,18 @@ export function useElectronAgent({
           break;
 
         case 'message':
-          // User message added
-          setMessages((prev) => [...prev, event.message]);
+          // User message added (with memory limit)
+          setMessages((prev) => {
+            const updated = [...prev, event.message];
+            // Trim older messages if exceeding limit
+            if (updated.length > MAX_MESSAGES_IN_MEMORY) {
+              logger.warn(
+                `Message limit reached (${MAX_MESSAGES_IN_MEMORY}), trimming older messages`
+              );
+              return updated.slice(-MAX_MESSAGES_IN_MEMORY);
+            }
+            return updated;
+          });
           break;
 
         case 'stream':
@@ -289,7 +321,7 @@ export function useElectronAgent({
                   msg.id === event.messageId ? { ...msg, content: event.content } : msg
                 );
               } else {
-                // Create new message
+                // Create new message (with memory limit)
                 const newMessage: Message = {
                   id: event.messageId,
                   role: 'assistant',
@@ -297,7 +329,10 @@ export function useElectronAgent({
                   timestamp: new Date().toISOString(),
                 };
                 currentMessageRef.current = newMessage;
-                return [...prev, newMessage];
+                const updated = [...prev, newMessage];
+                return updated.length > MAX_MESSAGES_IN_MEMORY
+                  ? updated.slice(-MAX_MESSAGES_IN_MEMORY)
+                  : updated;
               }
             });
           }
@@ -329,7 +364,12 @@ export function useElectronAgent({
           setError(event.error);
           if (event.message) {
             const errorMessage = event.message;
-            setMessages((prev) => [...prev, errorMessage]);
+            setMessages((prev) => {
+              const updated = [...prev, errorMessage];
+              return updated.length > MAX_MESSAGES_IN_MEMORY
+                ? updated.slice(-MAX_MESSAGES_IN_MEMORY)
+                : updated;
+            });
           } else {
             // Some providers stream an error without a message payload. Ensure the
             // user still sees a clear error bubble in the chat.
@@ -340,7 +380,12 @@ export function useElectronAgent({
               timestamp: new Date().toISOString(),
               isError: true,
             };
-            setMessages((prev) => [...prev, fallbackMessage]);
+            setMessages((prev) => {
+              const updated = [...prev, fallbackMessage];
+              return updated.length > MAX_MESSAGES_IN_MEMORY
+                ? updated.slice(-MAX_MESSAGES_IN_MEMORY)
+                : updated;
+            });
           }
           break;
 
@@ -430,7 +475,10 @@ export function useElectronAgent({
           workingDirectory,
           imagePaths,
           model,
-          thinkingLevel
+          thinkingLevel,
+          privacyGuardEnabled,
+          megabrainExpertsEnabled,
+          megabrainRagEnabled
         );
 
         if (!result.success) {
@@ -445,7 +493,16 @@ export function useElectronAgent({
         setIsProcessing(false);
       }
     },
-    [sessionId, workingDirectory, model, thinkingLevel, isProcessing]
+    [
+      sessionId,
+      workingDirectory,
+      model,
+      thinkingLevel,
+      isProcessing,
+      privacyGuardEnabled,
+      megabrainExpertsEnabled,
+      megabrainRagEnabled,
+    ]
   );
 
   // Stop current execution

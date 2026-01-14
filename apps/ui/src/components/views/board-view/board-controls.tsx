@@ -34,7 +34,7 @@ export function BoardControls({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Board Background Settings</p>
+            <p>Hintergrund-Einstellungen</p>
           </TooltipContent>
         </Tooltip>
 
@@ -57,7 +57,7 @@ export function BoardControls({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Completed Features ({completedCount})</p>
+            <p>Abgeschlossene Features ({completedCount})</p>
           </TooltipContent>
         </Tooltip>
       </div>

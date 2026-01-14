@@ -42,24 +42,24 @@ export function PromptCategoryGrid({ onSelect, onBack }: PromptCategoryGridProps
   return (
     <div className="flex-1 flex flex-col p-6 overflow-auto">
       <div className="max-w-4xl w-full mx-auto space-y-4">
-        {/* Back link */}
+        {/* Zurück-Link */}
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
+          <span>Zurück</span>
         </button>
 
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">Loading categories...</span>
+            <span className="ml-2 text-muted-foreground">Lade Kategorien...</span>
           </div>
         )}
         {error && (
           <div className="text-center py-12 text-destructive">
-            <p>Failed to load categories: {error}</p>
+            <p>Kategorien konnten nicht geladen werden: {error}</p>
           </div>
         )}
         {!isLoading && !error && (

@@ -191,28 +191,46 @@ export function createLogger(context: string): Logger {
   }
 
   // Node.js implementation with ANSI colors
+  // Wrapped in try-catch to handle EPIPE errors when stdout/stderr is closed
+  // (e.g., when Electron app is shutting down)
   return {
     error: (...args: unknown[]): void => {
       if (currentLogLevel >= LogLevel.ERROR) {
-        console.error(formatNodeLog('ERROR', context, ANSI.red), ...args);
+        try {
+          console.error(formatNodeLog('ERROR', context, ANSI.red), ...args);
+        } catch {
+          // Ignore EPIPE errors during shutdown
+        }
       }
     },
 
     warn: (...args: unknown[]): void => {
       if (currentLogLevel >= LogLevel.WARN) {
-        console.log(formatNodeLog('WARN', context, ANSI.yellow), ...args);
+        try {
+          console.log(formatNodeLog('WARN', context, ANSI.yellow), ...args);
+        } catch {
+          // Ignore EPIPE errors during shutdown
+        }
       }
     },
 
     info: (...args: unknown[]): void => {
       if (currentLogLevel >= LogLevel.INFO) {
-        console.log(formatNodeLog('INFO', context, ANSI.cyan), ...args);
+        try {
+          console.log(formatNodeLog('INFO', context, ANSI.cyan), ...args);
+        } catch {
+          // Ignore EPIPE errors during shutdown
+        }
       }
     },
 
     debug: (...args: unknown[]): void => {
       if (currentLogLevel >= LogLevel.DEBUG) {
-        console.log(formatNodeLog('DEBUG', context, ANSI.magenta), ...args);
+        try {
+          console.log(formatNodeLog('DEBUG', context, ANSI.magenta), ...args);
+        } catch {
+          // Ignore EPIPE errors during shutdown
+        }
       }
     },
   };

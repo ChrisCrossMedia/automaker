@@ -219,7 +219,7 @@ export function SettingsNavigation({
 
             {/* Project Settings Label */}
             <div className="px-3 py-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
-              Project Settings
+              Projekt-Einstellungen
             </div>
 
             {/* Project Settings Items */}

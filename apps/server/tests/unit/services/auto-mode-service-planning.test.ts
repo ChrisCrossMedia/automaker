@@ -43,9 +43,9 @@ describe('auto-mode-service.ts - Planning Mode', () => {
         requirePlanApproval: false,
       };
       const result = await getPlanningPromptPrefix(service, feature);
-      expect(result).toContain('Planning Phase (Lite Mode)');
+      expect(result).toContain('Planungsphase (Lite-Modus)');
       expect(result).toContain('[PLAN_GENERATED]');
-      expect(result).toContain('Feature Request');
+      expect(result).toContain('Feature-Anfrage');
     });
 
     it('should return lite_with_approval prompt for lite mode with approval', async () => {
@@ -55,10 +55,10 @@ describe('auto-mode-service.ts - Planning Mode', () => {
         requirePlanApproval: true,
       };
       const result = await getPlanningPromptPrefix(service, feature);
-      expect(result).toContain('## Planning Phase (Lite Mode)');
+      expect(result).toContain('## Planungsphase (Lite-Modus mit Genehmigung)');
       expect(result).toContain('[SPEC_GENERATED]');
       expect(result).toContain(
-        'DO NOT proceed with implementation until you receive explicit approval'
+        'Fahre NICHT mit der Implementierung fort, bis du eine explizite Genehmigung erhältst'
       );
     });
 
@@ -68,7 +68,7 @@ describe('auto-mode-service.ts - Planning Mode', () => {
         planningMode: 'spec' as const,
       };
       const result = await getPlanningPromptPrefix(service, feature);
-      expect(result).toContain('## Specification Phase (Spec Mode)');
+      expect(result).toContain('## Spezifikationsphase (Spec-Modus)');
       expect(result).toContain('```tasks');
       expect(result).toContain('T001');
       expect(result).toContain('[TASK_START]');
@@ -81,20 +81,20 @@ describe('auto-mode-service.ts - Planning Mode', () => {
         planningMode: 'full' as const,
       };
       const result = await getPlanningPromptPrefix(service, feature);
-      expect(result).toContain('## Full Specification Phase (Full SDD Mode)');
-      expect(result).toContain('Phase 1: Foundation');
-      expect(result).toContain('Phase 2: Core Implementation');
-      expect(result).toContain('Phase 3: Integration & Testing');
+      expect(result).toContain('## Vollständige Spezifikationsphase (Full SDD Modus)');
+      expect(result).toContain('Phase 1: Grundlagen');
+      expect(result).toContain('Phase 2: Kernimplementierung');
+      expect(result).toContain('Phase 3: Integration & Tests');
     });
 
-    it('should include the separator and Feature Request header', async () => {
+    it('should include the separator and Feature-Anfrage header', async () => {
       const feature = {
         id: 'test',
         planningMode: 'spec' as const,
       };
       const result = await getPlanningPromptPrefix(service, feature);
       expect(result).toContain('---');
-      expect(result).toContain('## Feature Request');
+      expect(result).toContain('## Feature-Anfrage');
     });
 
     it('should instruct agent to NOT output exploration text', async () => {
@@ -102,9 +102,9 @@ describe('auto-mode-service.ts - Planning Mode', () => {
       for (const mode of modes) {
         const feature = { id: 'test', planningMode: mode };
         const result = await getPlanningPromptPrefix(service, feature);
-        // All modes should have the IMPORTANT instruction about not outputting exploration text
-        expect(result).toContain('IMPORTANT: Do NOT output exploration text');
-        expect(result).toContain('Silently analyze the codebase first');
+        // All modes should have the WICHTIG instruction about not outputting exploration text
+        expect(result).toContain('WICHTIG: Gib KEINE Explorations-Texte');
+        expect(result).toContain('Analysiere die Codebase still');
       }
     });
   });
@@ -294,31 +294,31 @@ describe('auto-mode-service.ts - Planning Mode', () => {
     it('lite prompt should include correct structure', async () => {
       const feature = { id: 'test', planningMode: 'lite' as const };
       const result = await getPlanningPromptPrefix(service, feature);
-      expect(result).toContain('Goal');
-      expect(result).toContain('Approach');
-      expect(result).toContain('Files to Touch');
-      expect(result).toContain('Tasks');
-      expect(result).toContain('Risks');
+      expect(result).toContain('Ziel');
+      expect(result).toContain('Ansatz');
+      expect(result).toContain('Betroffene Dateien');
+      expect(result).toContain('Aufgaben');
+      expect(result).toContain('Risiken');
     });
 
     it('spec prompt should include task format instructions', async () => {
       const feature = { id: 'test', planningMode: 'spec' as const };
       const result = await getPlanningPromptPrefix(service, feature);
       expect(result).toContain('Problem');
-      expect(result).toContain('Solution');
-      expect(result).toContain('Acceptance Criteria');
-      expect(result).toContain('GIVEN-WHEN-THEN');
-      expect(result).toContain('Implementation Tasks');
-      expect(result).toContain('Verification');
+      expect(result).toContain('Lösung');
+      expect(result).toContain('Akzeptanzkriterien');
+      expect(result).toContain('GEGEBEN-WENN-DANN');
+      expect(result).toContain('Implementierungsaufgaben');
+      expect(result).toContain('Verifikation');
     });
 
     it('full prompt should include phases', async () => {
       const feature = { id: 'test', planningMode: 'full' as const };
       const result = await getPlanningPromptPrefix(service, feature);
-      expect(result).toContain('1. **Problem Statement**');
+      expect(result).toContain('1. **Problemstellung**');
       expect(result).toContain('2. **User Story**');
-      expect(result).toContain('4. **Technical Context**');
-      expect(result).toContain('5. **Non-Goals**');
+      expect(result).toContain('4. **Technischer Kontext**');
+      expect(result).toContain('5. **Nicht-Ziele**');
       expect(result).toContain('Phase 1');
       expect(result).toContain('Phase 2');
       expect(result).toContain('Phase 3');

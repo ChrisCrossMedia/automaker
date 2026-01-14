@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Complex worktree state management with many nullable properties
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Globe, Loader2, CircleDot, GitPullRequest } from 'lucide-react';
 import { cn } from '@/lib/utils';

@@ -43,7 +43,7 @@ export function AccountSection() {
 
   const handleRefreshEditors = async () => {
     await refresh();
-    toast.success('Editor list refreshed');
+    toast.success('Editorliste aktualisiert');
   };
 
   const handleLogout = async () => {
@@ -74,9 +74,9 @@ export function AccountSection() {
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-primary/20">
             <User className="w-5 h-5 text-primary" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground tracking-tight">Account</h2>
+          <h2 className="text-lg font-semibold text-foreground tracking-tight">Konto</h2>
         </div>
-        <p className="text-sm text-muted-foreground/80 ml-12">Manage your session and account.</p>
+        <p className="text-sm text-muted-foreground/80 ml-12">Sitzung und Konto verwalten.</p>
       </div>
       <div className="p-6 space-y-4">
         {/* Default IDE */}
@@ -86,9 +86,9 @@ export function AccountSection() {
               <Code2 className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <p className="font-medium text-foreground">Default IDE</p>
+              <p className="font-medium text-foreground">Standard-IDE</p>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
-                Default IDE to use when opening branches or worktrees
+                Standard-IDE zum Öffnen von Branches oder Worktrees
               </p>
             </div>
           </div>
@@ -99,7 +99,7 @@ export function AccountSection() {
               disabled={isLoadingEditors || isRefreshing || editors.length === 0}
             >
               <SelectTrigger className="w-[180px] shrink-0">
-                <SelectValue placeholder="Select editor">
+                <SelectValue placeholder="Editor wählen">
                   {effectiveEditor ? (
                     <span className="flex items-center gap-2">
                       {EffectiveEditorIcon && <EffectiveEditorIcon className="w-4 h-4" />}
@@ -109,7 +109,7 @@ export function AccountSection() {
                       )}
                     </span>
                   ) : (
-                    'Select editor'
+                    'Editor wählen'
                   )}
                 </SelectValue>
               </SelectTrigger>
@@ -117,7 +117,7 @@ export function AccountSection() {
                 <SelectItem value="auto">
                   <span className="flex items-center gap-2">
                     <Code2 className="w-4 h-4" />
-                    Auto-detect
+                    Automatisch erkennen
                   </span>
                 </SelectItem>
                 {editors.map((editor) => {
@@ -147,7 +147,7 @@ export function AccountSection() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Refresh available editors</p>
+                  <p>Verfügbare Editoren aktualisieren</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -161,9 +161,9 @@ export function AccountSection() {
               <LogOut className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <p className="font-medium text-foreground">Log Out</p>
+              <p className="font-medium text-foreground">Abmelden</p>
               <p className="text-xs text-muted-foreground/70 mt-0.5">
-                End your current session and return to the login screen
+                Aktuelle Sitzung beenden und zum Anmeldebildschirm zurückkehren
               </p>
             </div>
           </div>
@@ -179,7 +179,7 @@ export function AccountSection() {
             )}
           >
             <LogOut className="w-4 h-4" />
-            {isLoggingOut ? 'Logging out...' : 'Log Out'}
+            {isLoggingOut ? 'Abmelden...' : 'Abmelden'}
           </Button>
         </div>
       </div>

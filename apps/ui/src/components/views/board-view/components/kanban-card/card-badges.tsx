@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Component uses complex conditional badge rendering logic
 import { useEffect, useMemo, useState } from 'react';
 import { Feature, useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
@@ -86,13 +86,11 @@ export function PriorityBadges({ feature }: PriorityBadgesProps) {
       return;
     }
 
-    // eslint-disable-next-line no-undef
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
     }, 1000);
 
     return () => {
-      // eslint-disable-next-line no-undef
       clearInterval(interval);
     };
   }, [feature.justFinishedAt, feature.status, currentTime]);

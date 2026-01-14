@@ -42,7 +42,6 @@ export function AgentView() {
     sendMessage,
     clearHistory,
     stopExecution,
-    error: agentError,
     serverQueue,
     addToServerQueue,
     removeFromServerQueue,
@@ -106,7 +105,7 @@ export function AgentView() {
   }, [input, fileAttachments, isProcessing, sendMessage, addToServerQueue]);
 
   const handleClearChat = async () => {
-    if (!confirm('Are you sure you want to clear this conversation?')) return;
+    if (!confirm('Bist du sicher, dass du diese Konversation löschen möchtest?')) return;
     await clearHistory();
   };
 
@@ -127,7 +126,7 @@ export function AgentView() {
             id: 'welcome',
             role: 'assistant' as const,
             content:
-              "Hello! I'm the Automaker Agent. I can help you build software autonomously. I can read and modify files in this project, run commands, and execute tests. What would you like to create today?",
+              'Hallo! Ich bin der Automaker Agent. Ich kann dir helfen, Software autonom zu entwickeln. Ich kann Dateien in diesem Projekt lesen und bearbeiten, Befehle ausführen und Tests durchführen. Was möchtest du heute erstellen?',
             timestamp: new Date().toISOString(),
           },
         ]

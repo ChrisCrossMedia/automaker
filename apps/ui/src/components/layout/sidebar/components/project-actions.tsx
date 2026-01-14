@@ -36,11 +36,11 @@ export function ProjectActions({
           'transition-all duration-200 ease-out',
           'hover:scale-[1.02] active:scale-[0.97]'
         )}
-        title="New Project"
+        title="Neues Projekt"
         data-testid="new-project-button"
       >
         <Plus className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:rotate-90 group-hover:text-brand-500" />
-        <span className="ml-2 text-sm font-medium hidden lg:block whitespace-nowrap">New</span>
+        <span className="ml-2 text-sm font-medium hidden lg:block whitespace-nowrap">Neu</span>
       </button>
       <button
         onClick={handleOpenFolder}
@@ -55,7 +55,7 @@ export function ProjectActions({
           'transition-all duration-200 ease-out',
           'hover:scale-[1.02] active:scale-[0.97]'
         )}
-        title={`Open Folder (${shortcuts.openProject})`}
+        title={`Ordner öffnen (${shortcuts.openProject})`}
         data-testid="open-project-button"
       >
         <FolderOpen className="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110" />
@@ -76,7 +76,7 @@ export function ProjectActions({
           'transition-all duration-200 ease-out',
           'hover:scale-[1.02] active:scale-[0.97]'
         )}
-        title="Recycle Bin"
+        title="Papierkorb"
         data-testid="trash-button"
       >
         <Recycle className="size-4 shrink-0 transition-transform duration-200 group-hover:rotate-12" />

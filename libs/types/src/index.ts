@@ -126,6 +126,11 @@ export type {
   BoardBackgroundSettings,
   WorktreeInfo,
   ProjectSettings,
+  // LLM Mode types
+  LLMMode,
+  LocalPhaseModelConfig,
+  TaskComplexity,
+  MixedModeConfig,
 } from './settings.js';
 export {
   DEFAULT_KEYBOARD_SHORTCUTS,
@@ -134,6 +139,9 @@ export {
   DEFAULT_CREDENTIALS,
   DEFAULT_PROJECT_SETTINGS,
   SETTINGS_VERSION,
+  // LLM Mode defaults
+  DEFAULT_LOCAL_PHASE_MODELS,
+  DEFAULT_MIXED_MODE_CONFIG,
   CREDENTIALS_VERSION,
   PROJECT_SETTINGS_VERSION,
   THINKING_TOKEN_BUDGET,

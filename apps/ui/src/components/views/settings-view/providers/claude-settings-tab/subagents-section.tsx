@@ -32,7 +32,6 @@ export function SubagentsSection() {
   const {
     subagentsWithScope,
     isLoading: isLoadingAgents,
-    hasProject,
     refreshFilesystemAgents,
   } = useSubagents();
   const {

@@ -42,6 +42,10 @@ export type EventType =
   | 'ideation:idea-converted'
   | 'worktree:init-started'
   | 'worktree:init-output'
-  | 'worktree:init-completed';
+  | 'worktree:init-completed'
+  | 'megabrain_status'
+  | 'megabrain_rag'
+  | 'megabrain_advocatus'
+  | 'megabrain_skill';
 
 export type EventCallback = (type: EventType, payload: unknown) => void;

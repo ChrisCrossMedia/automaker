@@ -10,24 +10,12 @@ import {
   StoredValidation,
 } from '@/lib/electron';
 import type { LinkedPRInfo, PhaseModelEntry, ModelAlias, CursorModelId } from '@automaker/types';
+// Note: PhaseModelEntry, ModelAlias, CursorModelId are used in handleValidateIssue
 import { useAppStore } from '@/store/app-store';
 import { toast } from 'sonner';
 import { isValidationStale } from '../utils';
 
 const logger = createLogger('IssueValidation');
-
-/**
- * Extract model string from PhaseModelEntry or string (handles both formats)
- */
-function extractModel(
-  entry: PhaseModelEntry | string | undefined
-): ModelAlias | CursorModelId | undefined {
-  if (!entry) return undefined;
-  if (typeof entry === 'string') {
-    return entry as ModelAlias | CursorModelId;
-  }
-  return entry.model;
-}
 
 interface UseIssueValidationOptions {
   selectedIssue: GitHubIssue | null;

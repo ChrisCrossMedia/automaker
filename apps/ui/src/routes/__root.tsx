@@ -7,7 +7,7 @@ import {
   useFileBrowser,
   setGlobalFileBrowser,
 } from '@/contexts/file-browser-context';
-import { useAppStore, getStoredTheme } from '@/store/app-store';
+import { useAppStore, getStoredTheme, type ThemeMode } from '@/store/app-store';
 import { useSetupStore } from '@/store/setup-store';
 import { useAuthStore } from '@/store/auth-store';
 import { getElectronAPI, isElectron } from '@/lib/electron';
@@ -179,7 +179,6 @@ function RootLayoutContent() {
   const isLoginRoute = location.pathname === '/login';
   const isLoggedOutRoute = location.pathname === '/logged-out';
   const isDashboardRoute = location.pathname === '/dashboard';
-  const isBoardRoute = location.pathname === '/board';
   const isRootRoute = location.pathname === '/';
   const [autoOpenStatus, setAutoOpenStatus] = useState<AutoOpenStatus>(AUTO_OPEN_STATUS.idle);
   const autoOpenCandidate = selectAutoOpenProject(currentProject, projects, projectHistory);
@@ -660,7 +659,7 @@ function RootLayoutContent() {
           upsertAndSetCurrentProject(
             autoOpenCandidate.path,
             autoOpenCandidate.name,
-            autoOpenCandidate.theme
+            autoOpenCandidate.theme as ThemeMode | undefined
           );
         }
 

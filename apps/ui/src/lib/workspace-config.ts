@@ -35,8 +35,14 @@ async function getDefaultDocumentsPath(): Promise<string | null> {
     // In Electron mode, use the native getPath API directly from the preload script
     // This returns the actual system Documents folder (e.g., C:\Users\<user>\Documents on Windows)
     // Note: The HTTP client's getPath returns incorrect Unix-style paths for 'documents'
-    if (typeof window !== 'undefined' && (window as any).electronAPI?.getPath) {
-      const documentsPath = await (window as any).electronAPI.getPath('documents');
+    if (
+      typeof window !== 'undefined' &&
+      (window as { electronAPI?: { getPath?: (name: string) => Promise<string> } }).electronAPI
+        ?.getPath
+    ) {
+      const documentsPath = await (
+        window as { electronAPI: { getPath: (name: string) => Promise<string> } }
+      ).electronAPI.getPath('documents');
       return joinPath(documentsPath, 'Automaker');
     }
 

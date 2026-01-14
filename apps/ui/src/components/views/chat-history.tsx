@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppStore } from '@/store/app-store';
+import { useAppStore, type ChatSession } from '@/store/app-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -62,7 +62,7 @@ export function ChatHistory() {
     createChatSession();
   };
 
-  const handleSelectSession = (session: any) => {
+  const handleSelectSession = (session: ChatSession) => {
     setCurrentChatSession(session);
   };
 

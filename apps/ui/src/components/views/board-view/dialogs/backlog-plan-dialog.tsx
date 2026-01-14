@@ -43,16 +43,6 @@ function normalizeEntry(entry: PhaseModelEntry | string): PhaseModelEntry {
   return entry;
 }
 
-/**
- * Extract model string from PhaseModelEntry or string
- */
-function extractModel(entry: PhaseModelEntry | string): ModelAlias | CursorModelId {
-  if (typeof entry === 'string') {
-    return entry as ModelAlias | CursorModelId;
-  }
-  return entry.model;
-}
-
 interface BacklogPlanDialogProps {
   open: boolean;
   onClose: () => void;
@@ -283,7 +273,7 @@ export function BacklogPlanDialog({
           </div>
         );
 
-      case 'review':
+      case 'review': {
         if (!pendingPlanResult) return null;
 
         const additions = pendingPlanResult.changes.filter((c) => c.type === 'add');
@@ -389,6 +379,7 @@ export function BacklogPlanDialog({
             </div>
           </div>
         );
+      }
 
       case 'applying':
         return (
@@ -402,7 +393,6 @@ export function BacklogPlanDialog({
 
   // Get effective model entry (override or global default)
   const effectiveModelEntry = modelOverride || normalizeEntry(phaseModels.backlogPlanningModel);
-  const effectiveModel = effectiveModelEntry.model;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>

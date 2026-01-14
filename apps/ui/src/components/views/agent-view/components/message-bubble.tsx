@@ -49,7 +49,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       {/* Message Bubble */}
       <div
         className={cn(
-          'flex-1 max-w-[85%] rounded-2xl px-4 py-3 shadow-sm',
+          'flex-1 max-w-[85%] rounded-2xl px-4 py-3 shadow-sm overflow-hidden',
           isError
             ? 'bg-red-500/10 border border-red-500/30'
             : message.role === 'user'

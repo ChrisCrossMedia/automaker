@@ -113,15 +113,15 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
       if (response.success) {
         setOriginalContent(scriptContent);
         setScriptExists(true);
-        toast.success('Init script saved');
+        toast.success('Init-Skript gespeichert');
       } else {
-        toast.error('Failed to save init script', {
+        toast.error('Init-Skript konnte nicht gespeichert werden', {
           description: response.error,
         });
       }
     } catch (error) {
       console.error('Failed to save init script:', error);
-      toast.error('Failed to save init script');
+      toast.error('Init-Skript konnte nicht gespeichert werden');
     } finally {
       setIsSaving(false);
     }
@@ -148,15 +148,15 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
         setScriptContent('');
         setOriginalContent('');
         setScriptExists(false);
-        toast.success('Init script deleted');
+        toast.success('Init-Skript gelöscht');
       } else {
-        toast.error('Failed to delete init script', {
+        toast.error('Init-Skript konnte nicht gelöscht werden', {
           description: response.error,
         });
       }
     } catch (error) {
       console.error('Failed to delete init script:', error);
-      toast.error('Failed to delete init script');
+      toast.error('Init-Skript konnte nicht gelöscht werden');
     } finally {
       setIsDeleting(false);
     }
@@ -184,7 +184,7 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
           <h2 className="text-lg font-semibold text-foreground tracking-tight">Worktrees</h2>
         </div>
         <p className="text-sm text-muted-foreground/80 ml-12">
-          Configure git worktree isolation and initialization scripts.
+          Git-Worktree-Isolation und Initialisierungsskripte konfigurieren.
         </p>
       </div>
       <div className="p-6 space-y-5">
@@ -203,11 +203,11 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
               className="text-foreground cursor-pointer font-medium flex items-center gap-2"
             >
               <GitBranch className="w-4 h-4 text-brand-500" />
-              Enable Git Worktree Isolation
+              Git-Worktree-Isolation aktivieren
             </Label>
             <p className="text-xs text-muted-foreground/80 leading-relaxed">
-              Creates isolated git branches for each feature. When disabled, agents work directly in
-              the main project directory.
+              Erstellt isolierte Git-Branches für jedes Feature. Wenn deaktiviert, arbeiten Agenten
+              direkt im Hauptprojektverzeichnis.
             </p>
           </div>
         </div>
@@ -241,11 +241,11 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
                 className="text-foreground cursor-pointer font-medium flex items-center gap-2"
               >
                 <PanelBottomClose className="w-4 h-4 text-brand-500" />
-                Show Init Script Indicator
+                Init-Skript-Anzeige
               </Label>
               <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                Display a floating panel in the bottom-right corner showing init script execution
-                status and output when a worktree is created.
+                Zeigt ein schwebendes Panel in der unteren rechten Ecke mit dem Ausführungsstatus
+                und der Ausgabe des Init-Skripts an, wenn ein Worktree erstellt wird.
               </p>
             </div>
           </div>
@@ -279,10 +279,10 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
                 htmlFor="auto-dismiss-indicator"
                 className="text-foreground cursor-pointer font-medium flex items-center gap-2"
               >
-                Auto-dismiss After Completion
+                Automatisch ausblenden nach Abschluss
               </Label>
               <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                Automatically hide the indicator 5 seconds after the script completes.
+                Die Anzeige 5 Sekunden nach Abschluss des Skripts automatisch ausblenden.
               </p>
             </div>
           </div>
@@ -317,10 +317,11 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
                 className="text-foreground cursor-pointer font-medium flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4 text-brand-500" />
-                Delete Branch by Default
+                Branch standardmäßig löschen
               </Label>
               <p className="text-xs text-muted-foreground/80 leading-relaxed">
-                When deleting a worktree, automatically check the "Also delete the branch" option.
+                Beim Löschen eines Worktrees automatisch die Option "Auch den Branch löschen"
+                aktivieren.
               </p>
             </div>
           </div>
@@ -334,12 +335,13 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-brand-500" />
-              <Label className="text-foreground font-medium">Initialization Script</Label>
+              <Label className="text-foreground font-medium">Initialisierungsskript</Label>
             </div>
           </div>
           <p className="text-xs text-muted-foreground/80 leading-relaxed">
-            Shell commands to run after a worktree is created. Runs once per worktree. Uses Git Bash
-            on Windows for cross-platform compatibility.
+            Shell-Befehle, die nach dem Erstellen eines Worktrees ausgeführt werden. Wird einmal pro
+            Worktree ausgeführt. Verwendet Git Bash auf Windows für plattformübergreifende
+            Kompatibilität.
           </p>
 
           {currentProject ? (
@@ -349,7 +351,7 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
                 <FileCode className="w-3.5 h-3.5" />
                 <code className="font-mono">.automaker/worktree-init.sh</code>
                 {hasChanges && (
-                  <span className="text-amber-500 font-medium">(unsaved changes)</span>
+                  <span className="text-amber-500 font-medium">(ungespeicherte Änderungen)</span>
                 )}
               </div>
 
@@ -385,7 +387,7 @@ npm install
                       className="gap-1.5"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      Reset
+                      Zurücksetzen
                     </Button>
                     <Button
                       variant="outline"
@@ -399,7 +401,7 @@ npm install
                       ) : (
                         <Trash2 className="w-3.5 h-3.5" />
                       )}
-                      Delete
+                      Löschen
                     </Button>
                     <Button
                       size="sm"
@@ -412,7 +414,7 @@ npm install
                       ) : (
                         <Save className="w-3.5 h-3.5" />
                       )}
-                      Save
+                      Speichern
                     </Button>
                   </div>
                 </>
@@ -420,7 +422,7 @@ npm install
             </>
           ) : (
             <div className="text-sm text-muted-foreground/60 py-4 text-center">
-              Select a project to configure the init script.
+              Wähle ein Projekt, um das Init-Skript zu konfigurieren.
             </div>
           )}
         </div>

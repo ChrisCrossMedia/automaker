@@ -539,6 +539,10 @@ export function createCleanupHandler(processes) {
       killPromises.push(killProcessTree(processes.docker.pid));
     }
 
+    // Note: MEGABRAIN process runs detached and persists after Automaker exits
+    // This is intentional - MEGABRAIN can serve multiple clients
+    // To stop MEGABRAIN manually: kill the python3 megabrain8_startup.py process
+
     await Promise.all(killPromises);
   };
 }
@@ -837,6 +841,14 @@ export async function launchDockerDevContainers({ baseDir, processes }) {
   log('Launching Docker Container (Development Mode with Live Reload)...', 'blue');
   console.log('');
 
+  // AUTO-REFRESH: Prüfe und erneuere Claude OAuth Token
+  const tokenValid = await refreshClaudeOAuthToken(baseDir);
+  if (!tokenValid) {
+    log('⚠️  OAuth Token konnte nicht validiert/erneuert werden', 'yellow');
+    log('Falls Fehler auftreten, bitte "claude /login" ausführen', 'yellow');
+    console.log('');
+  }
+
   // Check if ANTHROPIC_API_KEY is set
   if (!process.env.ANTHROPIC_API_KEY) {
     log('Warning: ANTHROPIC_API_KEY environment variable is not set.', 'yellow');
@@ -844,6 +856,10 @@ export async function launchDockerDevContainers({ baseDir, processes }) {
     log('Set it with: export ANTHROPIC_API_KEY=your-key', 'yellow');
     console.log('');
   }
+
+  // Start MEGABRAIN 8 before Docker container (runs on host, not in container)
+  await startMegabrain8(processes);
+  console.log('');
 
   log('Starting development container...', 'yellow');
   log('Source code is volume mounted for live reload', 'yellow');
@@ -861,27 +877,263 @@ export async function launchDockerDevContainers({ baseDir, processes }) {
     log('Using docker-compose.override.yml for workspace mount', 'yellow');
   }
 
-  composeArgs.push('up', '--build');
+  composeArgs.push('up', '--build', '-d'); // -d = detached mode (Hintergrund)
 
   // Use docker-compose.dev.yml for development
   processes.docker = crossSpawn('docker', composeArgs, {
-    stdio: 'inherit',
+    stdio: 'pipe', // Don't show logs in terminal
     cwd: baseDir,
     env: {
       ...process.env,
     },
   });
 
-  log('Development container starting...', 'blue');
+  log('Development container starting im Hintergrund...', 'blue');
   log('UI will be available at: http://localhost:3007 (with HMR)', 'green');
   log('API will be available at: http://localhost:3008', 'green');
   console.log('');
+  log('Logs anzeigen: docker logs -f automaker-dev-server-only', 'yellow');
   log('Changes to source files will automatically reload.', 'yellow');
   log('Press Ctrl+C to stop the container.', 'yellow');
 
   await new Promise((resolve) => {
     processes.docker.on('close', resolve);
   });
+}
+
+/**
+ * Refresh Claude OAuth Token wenn abgelaufen
+ * Prüft Token-Ablauf und erneuert automatisch via refreshToken
+ * @param {string} baseDir - Base directory des Projekts
+ * @returns {Promise<boolean>} - true wenn Token gültig/erneuert, false bei Fehler
+ */
+export async function refreshClaudeOAuthToken(baseDir) {
+  log('Prüfe Claude OAuth Token...', 'yellow');
+
+  try {
+    const homeDir = process.env.HOME;
+    const credentialsPath = path.join(homeDir, '.claude', '.credentials.json');
+    let creds;
+    let credsSource = '';
+
+    // 1. Versuche zuerst aus Keychain zu laden (primär auf macOS)
+    if (process.platform === 'darwin') {
+      const username = execSync('whoami', { encoding: 'utf-8' }).trim();
+      try {
+        creds = execSync(
+          `security find-generic-password -s "Claude Code-credentials" -a "${username}" -w`,
+          { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        ).trim();
+        credsSource = 'Keychain';
+      } catch {
+        // Keychain leer - versuche Datei
+      }
+    }
+
+    // 2. Fallback: credentials.json
+    if (!creds && fsNative.existsSync(credentialsPath)) {
+      creds = fsNative.readFileSync(credentialsPath, 'utf-8').trim();
+      credsSource = 'credentials.json';
+    }
+
+    // 3. Keine Credentials gefunden - automatisches Login starten
+    if (!creds) {
+      log('Keine Credentials gefunden - starte automatisches Login...', 'yellow');
+      return await performAutoLogin(baseDir, credentialsPath);
+    }
+
+    log(`Credentials aus ${credsSource} geladen`, 'green');
+
+    if (!creds) {
+      log('Keine Credentials gefunden', 'red');
+      return false;
+    }
+
+    // Parse Credentials
+    const credsObj = JSON.parse(creds);
+    const oauth = credsObj.claudeAiOauth;
+
+    if (!oauth) {
+      log('Keine OAuth Daten in Credentials', 'red');
+      return false;
+    }
+
+    const expiresAt = oauth.expiresAt || 0;
+    const currentTime = Date.now();
+    const bufferMs = 5 * 60 * 1000; // 5 Minuten Puffer
+
+    // Token noch gültig?
+    if (expiresAt > currentTime + bufferMs) {
+      const minutesLeft = Math.round((expiresAt - currentTime) / 60000);
+      log(`✓ Token noch ${minutesLeft} Minuten gültig`, 'green');
+
+      // .env trotzdem aktualisieren
+      updateEnvFile(baseDir, creds);
+      return true;
+    }
+
+    log('Token abgelaufen oder bald ablaufend', 'yellow');
+
+    // Versuche zuerst Refresh via API (mit korrekter Client-ID)
+    const refreshToken = oauth.refreshToken;
+    if (refreshToken) {
+      log('Versuche automatischen Token-Refresh...', 'blue');
+      try {
+        const refreshResponse = execSync(
+          `curl -s -X POST "https://console.anthropic.com/v1/oauth/token" ` +
+            `-H "Content-Type: application/x-www-form-urlencoded" ` +
+            `-d "grant_type=refresh_token&refresh_token=${refreshToken}&client_id=9d1c250a-e61b-44d9-88ed-5944d1962f5e"`,
+          { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024, timeout: 30000 }
+        );
+
+        const refreshData = JSON.parse(refreshResponse);
+
+        if (refreshData.access_token) {
+          // Erfolg! Neue Credentials speichern
+          const newExpiresAt = Date.now() + (refreshData.expires_in || 86400) * 1000;
+          credsObj.claudeAiOauth = {
+            ...oauth,
+            accessToken: refreshData.access_token,
+            refreshToken: refreshData.refresh_token || refreshToken,
+            expiresAt: newExpiresAt,
+          };
+
+          const newCreds = JSON.stringify(credsObj);
+
+          // In Keychain speichern (falls macOS)
+          if (process.platform === 'darwin') {
+            const username = execSync('whoami', { encoding: 'utf-8' }).trim();
+            try {
+              execSync(
+                `security delete-generic-password -s "Claude Code-credentials" -a "${username}"`,
+                { stdio: 'pipe' }
+              );
+            } catch {
+              /* ignorieren */
+            }
+            execSync(
+              `security add-generic-password -s "Claude Code-credentials" -a "${username}" -w '${newCreds.replace(/'/g, "'\\''")}'`,
+              { stdio: 'pipe' }
+            );
+          }
+
+          // Auch in Datei speichern
+          fsNative.writeFileSync(credentialsPath, newCreds);
+          updateEnvFile(baseDir, newCreds);
+
+          const minutesValid = Math.round((newExpiresAt - Date.now()) / 60000);
+          log(`✓ Token automatisch erneuert! Gültig für ${minutesValid} Minuten`, 'green');
+          return true;
+        }
+      } catch (refreshErr) {
+        log(`API-Refresh fehlgeschlagen: ${refreshErr.message}`, 'yellow');
+      }
+    }
+
+    // Refresh fehlgeschlagen - automatisches Login starten
+    return await performAutoLogin(baseDir, credentialsPath);
+  } catch (err) {
+    log(`Token-Refresh Fehler: ${err.message}`, 'red');
+    return false;
+  }
+}
+
+/**
+ * Führt automatisches Login via Claude CLI durch
+ * Öffnet Browser, wartet auf Abschluss, lädt neue Credentials
+ */
+async function performAutoLogin(baseDir, credentialsPath) {
+  log('Starte automatisches Login...', 'blue');
+  console.log('');
+  log('═══════════════════════════════════════════════════════════', 'yellow');
+  log('  BROWSER ÖFFNET SICH - Bitte einloggen!', 'yellow');
+  log('  Das Fenster schließt sich automatisch nach dem Login.', 'yellow');
+  log('═══════════════════════════════════════════════════════════', 'yellow');
+  console.log('');
+
+  try {
+    // Führe claude login aus (blockiert bis Login abgeschlossen)
+    execSync('claude /login', {
+      stdio: 'inherit',
+      timeout: 300000, // 5 Minuten Timeout
+    });
+
+    // Kurz warten bis Credentials geschrieben sind
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    // Lade neue Credentials aus Keychain (primär) oder Datei
+    let newCreds;
+    if (process.platform === 'darwin') {
+      const username = execSync('whoami', { encoding: 'utf-8' }).trim();
+      try {
+        newCreds = execSync(
+          `security find-generic-password -s "Claude Code-credentials" -a "${username}" -w`,
+          { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] }
+        ).trim();
+      } catch {
+        /* Keychain leer */
+      }
+    }
+
+    if (!newCreds && fsNative.existsSync(credentialsPath)) {
+      newCreds = fsNative.readFileSync(credentialsPath, 'utf-8').trim();
+    }
+
+    if (newCreds) {
+      const newCredsObj = JSON.parse(newCreds);
+      const newOauth = newCredsObj.claudeAiOauth;
+
+      if (newOauth && newOauth.expiresAt > Date.now()) {
+        // Sync: Speichere in credentials.json falls noch nicht vorhanden
+        if (!fsNative.existsSync(credentialsPath)) {
+          fsNative.writeFileSync(credentialsPath, newCreds);
+        }
+        updateEnvFile(baseDir, newCreds);
+
+        const minutesValid = Math.round((newOauth.expiresAt - Date.now()) / 60000);
+        log(`✓ Login erfolgreich! Token gültig für ${minutesValid} Minuten`, 'green');
+        return true;
+      }
+    }
+
+    log('Login möglicherweise nicht abgeschlossen - bitte erneut versuchen', 'yellow');
+    return false;
+  } catch (loginErr) {
+    if (loginErr.message.includes('ETIMEDOUT') || loginErr.message.includes('timeout')) {
+      log('Login-Timeout - bitte manuell "claude /login" ausführen', 'red');
+    } else {
+      log(`Login-Fehler: ${loginErr.message}`, 'red');
+    }
+    return false;
+  }
+}
+
+/**
+ * Aktualisiert die .env Datei mit neuen OAuth Credentials
+ * @param {string} baseDir - Base directory des Projekts
+ * @param {string} creds - JSON string der Credentials
+ */
+function updateEnvFile(baseDir, creds) {
+  const envPath = path.join(baseDir, '.env');
+
+  let envContent = '';
+  if (fsNative.existsSync(envPath)) {
+    envContent = fsNative.readFileSync(envPath, 'utf-8');
+  }
+
+  // Entferne alte CLAUDE_OAUTH_CREDENTIALS Zeile
+  envContent = envContent
+    .split('\n')
+    .filter((line) => !line.startsWith('CLAUDE_OAUTH_CREDENTIALS='))
+    .join('\n');
+
+  // Füge neue Zeile hinzu
+  if (!envContent.endsWith('\n') && envContent.length > 0) {
+    envContent += '\n';
+  }
+  envContent += `CLAUDE_OAUTH_CREDENTIALS=${creds}\n`;
+
+  fsNative.writeFileSync(envPath, envContent);
 }
 
 /**
@@ -898,6 +1150,14 @@ export async function launchDockerDevServerContainer({ baseDir, processes }) {
   log('Launching Docker Server Container + Local Electron...', 'blue');
   console.log('');
 
+  // AUTO-REFRESH: Prüfe und erneuere Claude OAuth Token
+  const tokenValid = await refreshClaudeOAuthToken(baseDir);
+  if (!tokenValid) {
+    log('⚠️  OAuth Token konnte nicht validiert/erneuert werden', 'yellow');
+    log('Falls Fehler auftreten, bitte "claude /login" ausführen', 'yellow');
+    console.log('');
+  }
+
   // Check if ANTHROPIC_API_KEY is set
   if (!process.env.ANTHROPIC_API_KEY) {
     log('Warning: ANTHROPIC_API_KEY environment variable is not set.', 'yellow');
@@ -905,6 +1165,10 @@ export async function launchDockerDevServerContainer({ baseDir, processes }) {
     log('Set it with: export ANTHROPIC_API_KEY=your-key', 'yellow');
     console.log('');
   }
+
+  // Start MEGABRAIN 8 before Docker container (runs on host, not in container)
+  await startMegabrain8(processes);
+  console.log('');
 
   log('Starting server container...', 'yellow');
   log('Source code is volume mounted for live reload', 'yellow');
@@ -922,20 +1186,21 @@ export async function launchDockerDevServerContainer({ baseDir, processes }) {
     log('Using docker-compose.override.yml for workspace mount', 'yellow');
   }
 
-  composeArgs.push('up', '--build');
+  composeArgs.push('up', '--build', '-d'); // -d = detached mode (Hintergrund)
 
   // Use docker-compose.dev-server.yml for server-only development
-  // Run with piped stdio so we can still see output but also run Electron
+  // Run detached so no terminal window is needed
   processes.docker = crossSpawn('docker', composeArgs, {
-    stdio: 'inherit',
+    stdio: 'pipe', // Don't show logs in terminal
     cwd: baseDir,
     env: {
       ...process.env,
     },
   });
 
-  log('Server container starting...', 'blue');
+  log('Server container starting im Hintergrund...', 'blue');
   log('API will be available at: http://localhost:3008', 'green');
+  log('Logs anzeigen: docker logs -f automaker-dev-server-only', 'yellow');
   console.log('');
 
   // Wait for the server to become healthy
@@ -991,15 +1256,24 @@ export async function launchDockerDevServerContainer({ baseDir, processes }) {
   });
 
   log('Electron launched with SKIP_EMBEDDED_SERVER=true', 'green');
-  log('Changes to server source files will automatically reload.', 'yellow');
-  log('Press Ctrl+C to stop both Electron and the container.', 'yellow');
+  log('Docker container läuft im Hintergrund.', 'yellow');
+  log('Press Ctrl+C to stop Electron. Container stoppt automatisch.', 'yellow');
   console.log('');
 
-  // Wait for either process to exit
-  await Promise.race([
-    new Promise((resolve) => processes.docker.on('close', resolve)),
-    new Promise((resolve) => processes.electron.on('close', resolve)),
-  ]);
+  // Wait for Electron to exit (Docker runs detached in background)
+  await new Promise((resolve) => processes.electron.on('close', resolve));
+
+  // Stop Docker container when Electron closes
+  log('Stopping Docker container...', 'yellow');
+  try {
+    execSync('docker compose -f docker-compose.dev-server.yml down', {
+      cwd: baseDir,
+      stdio: 'pipe',
+    });
+    log('Docker container gestoppt.', 'green');
+  } catch {
+    // Container might already be stopped
+  }
 }
 
 /**
@@ -1092,4 +1366,131 @@ export async function launchDockerContainers({ baseDir, processes }) {
   await new Promise((resolve) => {
     processes.docker.on('close', resolve);
   });
+}
+
+// =============================================================================
+// MEGABRAIN 8 Auto-Start
+// =============================================================================
+
+const MEGABRAIN_PATH = '/Users/chriscrossmedia/Megabrain 8.0';
+const MEGABRAIN_API_PORT = 8081;
+
+/**
+ * Check if MEGABRAIN 8 is already running
+ * @returns {Promise<boolean>} True if MEGABRAIN is running on port 8081
+ */
+async function isMegabrainRunning() {
+  return new Promise((resolve) => {
+    const req = http.request(
+      {
+        hostname: 'localhost',
+        port: MEGABRAIN_API_PORT,
+        path: '/health',
+        method: 'GET',
+        timeout: 2000,
+      },
+      (res) => {
+        resolve(res.statusCode === 200);
+      }
+    );
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+    req.end();
+  });
+}
+
+/**
+ * Start MEGABRAIN 8 API server
+ * Runs megabrain8_startup.py in the background
+ * @param {object} processes - Processes object to track megabrain process
+ * @returns {Promise<boolean>} True if MEGABRAIN started successfully
+ */
+export async function startMegabrain8(processes = {}) {
+  // Check if already running
+  if (await isMegabrainRunning()) {
+    log('MEGABRAIN 8 is already running on port ' + MEGABRAIN_API_PORT, 'green');
+    return true;
+  }
+
+  log('Starting MEGABRAIN 8...', 'blue');
+
+  // Check if MEGABRAIN path exists
+  if (!fsNative.existsSync(MEGABRAIN_PATH)) {
+    log('Warning: MEGABRAIN 8 path not found: ' + MEGABRAIN_PATH, 'yellow');
+    log('MEGABRAIN features will not be available.', 'yellow');
+    return false;
+  }
+
+  // Check if startup script exists
+  const startupScript = path.join(MEGABRAIN_PATH, 'megabrain8_startup.py');
+  if (!fsNative.existsSync(startupScript)) {
+    log('Warning: MEGABRAIN startup script not found: ' + startupScript, 'yellow');
+    return false;
+  }
+
+  try {
+    // Start MEGABRAIN in background with detached process
+    const megabrainProcess = crossSpawn('python3', [startupScript], {
+      cwd: MEGABRAIN_PATH,
+      detached: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: {
+        ...process.env,
+        MEGABRAIN_INSTANCE_ID: 'automaker',
+        MEGABRAIN_INSTANCE_TYPE: 'api',
+      },
+    });
+
+    // Store reference for cleanup
+    if (processes) {
+      processes.megabrain = megabrainProcess;
+    }
+
+    // Unref to allow parent to exit independently (but we'll manage cleanup)
+    megabrainProcess.unref();
+
+    // Log output for debugging
+    if (megabrainProcess.stdout) {
+      megabrainProcess.stdout.on('data', (data) => {
+        const line = data.toString().trim();
+        if (line.includes('ERROR') || line.includes('error')) {
+          log('[MEGABRAIN] ' + line, 'red');
+        }
+      });
+    }
+
+    if (megabrainProcess.stderr) {
+      megabrainProcess.stderr.on('data', (data) => {
+        const line = data.toString().trim();
+        if (line && !line.includes('INFO')) {
+          log('[MEGABRAIN] ' + line, 'yellow');
+        }
+      });
+    }
+
+    // Wait for MEGABRAIN to become healthy (max 30 seconds)
+    log('Waiting for MEGABRAIN 8 to start...', 'yellow');
+    const maxRetries = 30;
+    for (let i = 0; i < maxRetries; i++) {
+      await sleep(1000);
+      if (await isMegabrainRunning()) {
+        log('MEGABRAIN 8 started successfully on port ' + MEGABRAIN_API_PORT, 'green');
+        return true;
+      }
+      if (i > 0 && i % 5 === 0) {
+        process.stdout.write('.');
+      }
+    }
+
+    console.log('');
+    log('Warning: MEGABRAIN 8 did not become healthy within 30 seconds', 'yellow');
+    log('MEGABRAIN features may not be available.', 'yellow');
+    return false;
+  } catch (error) {
+    log('Error starting MEGABRAIN 8: ' + error.message, 'red');
+    return false;
+  }
 }

@@ -130,8 +130,11 @@ export const handleServerOffline = (): void => {
  */
 export const initServerUrl = async (): Promise<void> => {
   // window.electronAPI is typed as ElectronAPI, but some Electron-only helpers
-  // (like getServerUrl) are not part of the shared interface. Narrow via `any`.
-  const electron = typeof window !== 'undefined' ? (window.electronAPI as any) : null;
+  // (like getServerUrl) are not part of the shared interface. Narrow via specific type.
+  const electron =
+    typeof window !== 'undefined'
+      ? (window.electronAPI as (ElectronAPI & { getServerUrl?: () => Promise<string> }) | undefined)
+      : null;
   if (electron?.getServerUrl) {
     try {
       cachedServerUrl = await electron.getServerUrl();
@@ -162,9 +165,19 @@ const getServerUrl = (): string => {
 export const getServerUrlSync = (): string => getServerUrl();
 
 // Cached API key for authentication (Electron mode only)
-let cachedApiKey: string | null = null;
+// IMPORTANT: Hardcoded fallback for external server mode
+// TODO: Remove hardcoded key after fixing env variable issue
+const FALLBACK_API_KEY = '9b29a1ea-b903-49aa-8a02-0112e9fd1e04';
+let cachedApiKey: string | null = import.meta.env.VITE_AUTOMAKER_API_KEY || FALLBACK_API_KEY;
 let apiKeyInitialized = false;
 let apiKeyInitPromise: Promise<void> | null = null;
+
+// Log which key is being used
+console.log(
+  '[http-api-client] API key source:',
+  import.meta.env.VITE_AUTOMAKER_API_KEY ? 'VITE_ENV' : 'FALLBACK'
+);
+console.log('[http-api-client] Using API key:', cachedApiKey?.substring(0, 8) + '...');
 
 // Cached session token for authentication (Web mode - explicit header auth)
 // Only used in-memory after fresh login; on refresh we rely on HTTP-only cookies
@@ -177,12 +190,62 @@ export const getApiKey = (): string | null => cachedApiKey;
 /**
  * Wait for API key initialization to complete.
  * Returns immediately if already initialized.
+ * In Electron mode, also waits until the API key is actually available.
  */
-export const waitForApiKeyInit = (): Promise<void> => {
-  if (apiKeyInitialized) return Promise.resolve();
-  if (apiKeyInitPromise) return apiKeyInitPromise;
-  // If not started yet, start it now
-  return initApiKey();
+export const waitForApiKeyInit = async (): Promise<void> => {
+  // If we already have a cached API key, we're done
+  if (cachedApiKey) {
+    return;
+  }
+
+  // Wait for the init promise if in progress
+  if (apiKeyInitPromise) {
+    await apiKeyInitPromise;
+  } else if (!apiKeyInitialized) {
+    // If not started yet, start it now
+    await initApiKey();
+  }
+
+  // If we have a key now, we're done
+  if (cachedApiKey) {
+    return;
+  }
+
+  // Poll for API key (handles race condition where electronAPI or key isn't ready yet)
+  // This works for both Electron mode and early startup before electronAPI is available
+  const maxWait = 5000;
+  const interval = 100;
+  let waited = 0;
+
+  while (!cachedApiKey && waited < maxWait) {
+    await new Promise((resolve) => setTimeout(resolve, interval));
+    waited += interval;
+
+    // Try to get the key from Electron
+    if (typeof window !== 'undefined' && window.electronAPI?.getApiKey) {
+      try {
+        const key = await window.electronAPI.getApiKey();
+        if (key) {
+          cachedApiKey = key;
+          logger.info('API key loaded after', waited, 'ms:', key.substring(0, 8) + '...');
+          return;
+        }
+      } catch {
+        // ignore - IPC might not be ready yet
+      }
+    }
+  }
+
+  // After waiting, check if we're in web mode (no electronAPI means web)
+  if (!isElectronMode()) {
+    // Web mode - no API key needed, cookies handle auth
+    return;
+  }
+
+  // Electron mode but no key - log warning
+  if (!cachedApiKey) {
+    logger.warn('API key not available after', maxWait, 'ms - requests may fail');
+  }
 };
 
 // Get session token for Web mode (returns cached value after login)
@@ -207,7 +270,7 @@ export const isElectronMode = (): boolean => {
   // Prefer a stable runtime marker from preload.
   // In some dev/electron setups, method availability can be temporarily undefined
   // during early startup, but `isElectron` remains reliable.
-  const api = window.electronAPI as any;
+  const api = window.electronAPI as (ElectronAPI & { isElectron?: boolean }) | undefined;
   return api?.isElectron === true || !!api?.getApiKey;
 };
 
@@ -224,7 +287,9 @@ export const checkExternalServerMode = async (): Promise<boolean> => {
   }
 
   if (typeof window !== 'undefined') {
-    const api = window.electronAPI as any;
+    const api = window.electronAPI as
+      | (ElectronAPI & { isExternalServerMode?: () => Promise<boolean> })
+      | undefined;
     if (api?.isExternalServerMode) {
       try {
         cachedExternalServerMode = Boolean(await api.isExternalServerMode());
@@ -245,6 +310,103 @@ export const checkExternalServerMode = async (): Promise<boolean> => {
 export const isExternalServerMode = (): boolean | null => cachedExternalServerMode;
 
 /**
+ * Path mapping for Docker mode (external server)
+ * Maps local paths to container paths
+ */
+const PATH_MAPPINGS: Array<{ local: string; container: string }> = [
+  // Projects directory - from docker-compose.override.yml
+  { local: '/Users/chriscrossmedia/Automaker Projekte', container: '/projects' },
+  // Data directory - from docker-compose.dev-server.yml
+  { local: '/Users/chriscrossmedia/automaker/data', container: '/data' },
+];
+
+/**
+ * Transform a local path to a Docker container path
+ * Only applies when running in external server mode (Docker)
+ */
+const transformPathForDocker = (path: string | undefined): string | undefined => {
+  if (!path || cachedExternalServerMode !== true) {
+    return path;
+  }
+
+  for (const mapping of PATH_MAPPINGS) {
+    if (path.startsWith(mapping.local)) {
+      const transformed = path.replace(mapping.local, mapping.container);
+      logger.info(`Path transformed: ${path} -> ${transformed}`);
+      return transformed;
+    }
+  }
+
+  return path;
+};
+
+/**
+ * Transform all path-like properties in a request body for Docker mode
+ */
+const transformBodyPathsForDocker = (body: unknown): unknown => {
+  if (!body || cachedExternalServerMode !== true) {
+    return body;
+  }
+
+  if (typeof body !== 'object') {
+    return body;
+  }
+
+  // Path property names that should be transformed
+  const pathProps = ['projectPath', 'worktreePath', 'workingDirectory', 'path', 'filePath'];
+
+  const result = { ...(body as Record<string, unknown>) };
+
+  for (const prop of pathProps) {
+    if (prop in result && typeof result[prop] === 'string') {
+      result[prop] = transformPathForDocker(result[prop] as string);
+    }
+  }
+
+  return result;
+};
+
+/**
+ * Transform URL query parameters containing paths for Docker mode
+ */
+const transformUrlPathsForDocker = (url: string): string => {
+  if (cachedExternalServerMode !== true) {
+    return url;
+  }
+
+  // Path parameter names that should be transformed in URLs
+  const pathParams = ['projectPath', 'worktreePath', 'path', 'filePath'];
+
+  try {
+    const urlObj = new URL(url, 'http://placeholder');
+    let changed = false;
+
+    for (const param of pathParams) {
+      const value = urlObj.searchParams.get(param);
+      if (value) {
+        const decodedValue = decodeURIComponent(value);
+        const transformed = transformPathForDocker(decodedValue);
+        if (transformed !== decodedValue) {
+          urlObj.searchParams.set(param, transformed || '');
+          changed = true;
+        }
+      }
+    }
+
+    if (changed) {
+      // Return just the path and query, not the full URL
+      const transformedUrl = urlObj.pathname + urlObj.search;
+      logger.info(`URL transformed: ${url} -> ${transformedUrl}`);
+      return transformedUrl;
+    }
+  } catch (e) {
+    logger.warn('Failed to parse URL for path transformation:', url, e);
+  }
+
+  return url;
+};
+
+/**
  * Initialize API key and server URL for Electron mode authentication.
  * In web mode, authentication uses HTTP-only cookies instead.
  *
@@ -257,18 +419,33 @@ export const initApiKey = async (): Promise<void> => {
   // Return immediately if already initialized
   if (apiKeyInitialized) return;
 
+  logger.info('initApiKey: Starting initialization...');
+
   // Create and store the promise so concurrent calls wait for the same initialization
   apiKeyInitPromise = (async () => {
     try {
       // Initialize server URL from Electron IPC first (needed for API requests)
       await initServerUrl();
 
+      // Check and cache external server mode for path transformation
+      await checkExternalServerMode();
+      logger.info('initApiKey: External server mode:', cachedExternalServerMode);
+
       // Only Electron mode uses API key header auth
+      logger.info(
+        'initApiKey: Checking for electronAPI...',
+        typeof window !== 'undefined' && !!window.electronAPI
+      );
       if (typeof window !== 'undefined' && window.electronAPI?.getApiKey) {
+        logger.info('initApiKey: Calling window.electronAPI.getApiKey()...');
         try {
           cachedApiKey = await window.electronAPI.getApiKey();
+          logger.info(
+            'initApiKey: Got API key:',
+            cachedApiKey ? cachedApiKey.substring(0, 8) + '...' : 'null'
+          );
           if (cachedApiKey) {
-            logger.info('Using API key from Electron');
+            logger.info('Using API key from Electron:', cachedApiKey.substring(0, 8) + '...');
             return;
           }
         } catch (error) {
@@ -281,6 +458,10 @@ export const initApiKey = async (): Promise<void> => {
     } finally {
       // Mark as initialized after completion, regardless of success or failure
       apiKeyInitialized = true;
+      logger.info(
+        'initApiKey: Initialization complete, cachedApiKey:',
+        cachedApiKey ? 'set' : 'null'
+      );
     }
   })();
 
@@ -558,7 +739,13 @@ export class HttpApiClient implements ElectronAPI {
         'Content-Type': 'application/json',
       };
 
-      // Add session token header if available
+      // Electron mode: use API key (also works for external server mode)
+      const apiKey = getApiKey();
+      if (apiKey) {
+        headers['X-API-Key'] = apiKey;
+      }
+
+      // Web mode: add session token header if available
       const sessionToken = getSessionToken();
       if (sessionToken) {
         headers['X-Session-Token'] = sessionToken;
@@ -571,7 +758,12 @@ export class HttpApiClient implements ElectronAPI {
       });
 
       if (response.status === 401 || response.status === 403) {
-        handleUnauthorized();
+        // Only trigger logout if we're not in API key mode (external server uses API key)
+        if (!apiKey) {
+          handleUnauthorized();
+        } else {
+          logger.warn('Auth failed with API key - may be invalid');
+        }
         return null;
       }
 
@@ -748,6 +940,14 @@ export class HttpApiClient implements ElectronAPI {
       return headers;
     }
 
+    // Fallback to Vite environment variable (for external server mode)
+    const envApiKey = import.meta.env.VITE_AUTOMAKER_API_KEY;
+    if (envApiKey) {
+      cachedApiKey = envApiKey;
+      headers['X-API-Key'] = envApiKey;
+      return headers;
+    }
+
     // Web mode: use session token if available
     const sessionToken = getSessionToken();
     if (sessionToken) {
@@ -757,19 +957,88 @@ export class HttpApiClient implements ElectronAPI {
     return headers;
   }
 
-  private async post<T>(endpoint: string, body?: unknown): Promise<T> {
+  /**
+   * Get headers with fresh API key lookup (async version)
+   * Use this when the cached key might not be available yet
+   */
+  private async getHeadersAsync(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Try to get API key directly from Electron (fresh lookup)
+    if (typeof window !== 'undefined' && window.electronAPI?.getApiKey) {
+      try {
+        const apiKey = await window.electronAPI.getApiKey();
+        if (apiKey) {
+          cachedApiKey = apiKey;
+          headers['X-API-Key'] = apiKey;
+          return headers;
+        }
+      } catch {
+        // IPC not ready
+      }
+    }
+
+    // Fallback to cached key
+    const apiKey = getApiKey();
+    if (apiKey) {
+      headers['X-API-Key'] = apiKey;
+      return headers;
+    }
+
+    // Fallback to Vite environment variable (for external server mode)
+    const envApiKey = import.meta.env.VITE_AUTOMAKER_API_KEY;
+    if (envApiKey) {
+      cachedApiKey = envApiKey;
+      headers['X-API-Key'] = envApiKey;
+      logger.info('Using API key from VITE_AUTOMAKER_API_KEY');
+      return headers;
+    }
+
+    // Web mode: use session token if available
+    const sessionToken = getSessionToken();
+    if (sessionToken) {
+      headers['X-Session-Token'] = sessionToken;
+    }
+
+    return headers;
+  }
+
+  private async post<T>(endpoint: string, body?: unknown, retryCount = 0): Promise<T> {
     // Ensure API key is initialized before making request
     await waitForApiKeyInit();
+
+    // Get headers with fresh API key lookup
+    const headers = await this.getHeadersAsync();
+
+    // Transform paths for Docker mode (external server)
+    const transformedBody = transformBodyPathsForDocker(body);
+
     const response = await fetch(`${this.serverUrl}${endpoint}`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers,
       credentials: 'include', // Include cookies for session auth
-      body: body ? JSON.stringify(body) : undefined,
+      body: transformedBody ? JSON.stringify(transformedBody) : undefined,
     });
 
     if (response.status === 401 || response.status === 403) {
-      handleUnauthorized();
-      throw new Error('Unauthorized');
+      // Only trigger logout if we're not in API key mode
+      // In Electron mode with API key, 401/403 means invalid key, not session expiry
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        handleUnauthorized();
+        throw new Error('Unauthorized');
+      } else {
+        // In API key mode, retry once after a short delay (timing issue)
+        if (retryCount < 2) {
+          logger.warn(`Auth failed for ${endpoint}, retrying in 500ms...`);
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return this.post<T>(endpoint, body, retryCount + 1);
+        }
+        logger.warn(`Auth failed with API key for ${endpoint} after retry`);
+        throw new Error('Unauthorized');
+      }
     }
 
     if (!response.ok) {
@@ -788,18 +1057,57 @@ export class HttpApiClient implements ElectronAPI {
     return response.json();
   }
 
-  private async get<T>(endpoint: string): Promise<T> {
+  private async get<T>(endpoint: string, retryCount = 0): Promise<T> {
     // Ensure API key is initialized before making request
     await waitForApiKeyInit();
-    const response = await fetch(`${this.serverUrl}${endpoint}`, {
+
+    // CRITICAL: In Electron mode, absolutely ensure we have the API key before proceeding
+    if (typeof window !== 'undefined' && window.electronAPI?.getApiKey && !getApiKey()) {
+      const maxWait = 8000;
+      const interval = 200;
+      let waited = 0;
+      logger.info(`[GET ${endpoint}] Waiting for API key...`);
+      while (!getApiKey() && waited < maxWait) {
+        await new Promise((resolve) => setTimeout(resolve, interval));
+        waited += interval;
+        try {
+          const key = await window.electronAPI.getApiKey();
+          if (key) {
+            cachedApiKey = key;
+            logger.info(`[GET ${endpoint}] API key loaded after ${waited}ms`);
+            break;
+          }
+        } catch {
+          // IPC not ready yet
+        }
+      }
+    }
+
+    // Transform URL paths for Docker mode (external server)
+    const transformedEndpoint = transformUrlPathsForDocker(endpoint);
+
+    const response = await fetch(`${this.serverUrl}${transformedEndpoint}`, {
       headers: this.getHeaders(),
       credentials: 'include', // Include cookies for session auth
       cache: NO_STORE_CACHE_MODE,
     });
 
     if (response.status === 401 || response.status === 403) {
-      handleUnauthorized();
-      throw new Error('Unauthorized');
+      // Only trigger logout if we're not in API key mode
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        handleUnauthorized();
+        throw new Error('Unauthorized');
+      } else {
+        // In API key mode, retry once after a short delay (timing issue)
+        if (retryCount < 1) {
+          logger.warn(`Auth failed for ${transformedEndpoint}, retrying in 500ms...`);
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return this.get<T>(endpoint, retryCount + 1);
+        }
+        logger.warn(`Auth failed with API key for ${transformedEndpoint} after retry`);
+        throw new Error('Unauthorized');
+      }
     }
 
     if (!response.ok) {
@@ -821,15 +1129,25 @@ export class HttpApiClient implements ElectronAPI {
   private async put<T>(endpoint: string, body?: unknown): Promise<T> {
     // Ensure API key is initialized before making request
     await waitForApiKeyInit();
+
+    // Transform paths for Docker mode (external server)
+    const transformedBody = transformBodyPathsForDocker(body);
+
     const response = await fetch(`${this.serverUrl}${endpoint}`, {
       method: 'PUT',
       headers: this.getHeaders(),
       credentials: 'include', // Include cookies for session auth
-      body: body ? JSON.stringify(body) : undefined,
+      body: transformedBody ? JSON.stringify(transformedBody) : undefined,
     });
 
     if (response.status === 401 || response.status === 403) {
-      handleUnauthorized();
+      // Only trigger logout if we're not in API key mode
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        handleUnauthorized();
+      } else {
+        logger.warn(`Auth failed with API key for ${endpoint} - may be invalid or timing issue`);
+      }
       throw new Error('Unauthorized');
     }
 
@@ -852,15 +1170,25 @@ export class HttpApiClient implements ElectronAPI {
   private async httpDelete<T>(endpoint: string, body?: unknown): Promise<T> {
     // Ensure API key is initialized before making request
     await waitForApiKeyInit();
+
+    // Transform paths for Docker mode (external server)
+    const transformedBody = transformBodyPathsForDocker(body);
+
     const response = await fetch(`${this.serverUrl}${endpoint}`, {
       method: 'DELETE',
       headers: this.getHeaders(),
       credentials: 'include', // Include cookies for session auth
-      body: body ? JSON.stringify(body) : undefined,
+      body: transformedBody ? JSON.stringify(transformedBody) : undefined,
     });
 
     if (response.status === 401 || response.status === 403) {
-      handleUnauthorized();
+      // Only trigger logout if we're not in API key mode
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        handleUnauthorized();
+      } else {
+        logger.warn(`Auth failed with API key for ${endpoint} - may be invalid or timing issue`);
+      }
       throw new Error('Unauthorized');
     }
 
@@ -1683,7 +2011,7 @@ export class HttpApiClient implements ElectronAPI {
       this.post('/api/worktree/commit', { worktreePath, message }),
     push: (worktreePath: string, force?: boolean) =>
       this.post('/api/worktree/push', { worktreePath, force }),
-    createPR: (worktreePath: string, options?: any) =>
+    createPR: (worktreePath: string, options?: { title?: string; body?: string; base?: string }) =>
       this.post('/api/worktree/create-pr', { worktreePath, ...options }),
     getDiffs: (projectPath: string, featureId: string) =>
       this.post('/api/worktree/diffs', { projectPath, featureId }),
@@ -1889,7 +2217,10 @@ export class HttpApiClient implements ElectronAPI {
       workingDirectory?: string,
       imagePaths?: string[],
       model?: string,
-      thinkingLevel?: string
+      thinkingLevel?: string,
+      privacyGuardEnabled?: boolean,
+      expertsEnabled?: boolean,
+      ragEnabled?: boolean
     ): Promise<{ success: boolean; error?: string }> =>
       this.post('/api/agent/send', {
         sessionId,
@@ -1898,6 +2229,9 @@ export class HttpApiClient implements ElectronAPI {
         imagePaths,
         model,
         thinkingLevel,
+        privacyGuardEnabled,
+        expertsEnabled,
+        ragEnabled,
       }),
 
     getHistory: (
@@ -2091,6 +2425,9 @@ export class HttpApiClient implements ElectronAPI {
           hideScrollbar: boolean;
         };
         worktreePanelVisible?: boolean;
+        showInitScriptIndicator?: boolean;
+        defaultDeleteBranchWithWorktree?: boolean;
+        autoDismissInitScriptIndicator?: boolean;
         lastSelectedSessionId?: string;
       };
       error?: string;
@@ -2324,11 +2661,11 @@ export class HttpApiClient implements ElectronAPI {
 
     getPrompts: () => this.get('/api/ideation/prompts'),
 
-    onStream: (callback: (event: any) => void): (() => void) => {
+    onStream: (callback: (event: unknown) => void): (() => void) => {
       return this.subscribeToEvent('ideation:stream', callback as EventCallback);
     },
 
-    onAnalysisEvent: (callback: (event: any) => void): (() => void) => {
+    onAnalysisEvent: (callback: (event: unknown) => void): (() => void) => {
       return this.subscribeToEvent('ideation:analysis', callback as EventCallback);
     },
   };

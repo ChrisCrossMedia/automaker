@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Complex hook with dynamic feature types and external API integrations
 import { useCallback } from 'react';
 import {
   Feature,

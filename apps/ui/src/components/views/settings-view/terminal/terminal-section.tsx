@@ -45,20 +45,20 @@ export function TerminalSection() {
           <h2 className="text-lg font-semibold text-foreground tracking-tight">Terminal</h2>
         </div>
         <p className="text-sm text-muted-foreground/80 ml-12">
-          Customize terminal appearance and behavior. Theme follows your app theme in Appearance
-          settings.
+          Terminal-Erscheinung und -Verhalten anpassen. Das Design folgt dem App-Design in den
+          Erscheinungsbild-Einstellungen.
         </p>
       </div>
       <div className="p-6 space-y-6">
         {/* Font Family */}
         <div className="space-y-3">
-          <Label className="text-foreground font-medium">Font Family</Label>
+          <Label className="text-foreground font-medium">Schriftart</Label>
           <select
             value={fontFamily}
             onChange={(e) => {
               setTerminalFontFamily(e.target.value);
-              toast.info('Font family changed', {
-                description: 'Restart terminal for changes to take effect',
+              toast.info('Schriftart geändert', {
+                description: 'Terminal neu starten, damit Änderungen wirksam werden',
               });
             }}
             className={cn(
@@ -79,7 +79,7 @@ export function TerminalSection() {
         {/* Default Font Size */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-foreground font-medium">Default Font Size</Label>
+            <Label className="text-foreground font-medium">Standard-Schriftgröße</Label>
             <span className="text-sm text-muted-foreground">{defaultFontSize}px</span>
           </div>
           <Slider
@@ -95,7 +95,7 @@ export function TerminalSection() {
         {/* Line Height */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-foreground font-medium">Line Height</Label>
+            <Label className="text-foreground font-medium">Zeilenhöhe</Label>
             <span className="text-sm text-muted-foreground">{lineHeight.toFixed(1)}</span>
           </div>
           <Slider
@@ -107,8 +107,8 @@ export function TerminalSection() {
               setTerminalLineHeight(value);
             }}
             onValueCommit={() => {
-              toast.info('Line height changed', {
-                description: 'Restart terminal for changes to take effect',
+              toast.info('Zeilenhöhe geändert', {
+                description: 'Terminal neu starten, damit Änderungen wirksam werden',
               });
             }}
             className="flex-1"
@@ -118,9 +118,9 @@ export function TerminalSection() {
         {/* Scrollback Lines */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label className="text-foreground font-medium">Scrollback Buffer</Label>
+            <Label className="text-foreground font-medium">Scrollback-Puffer</Label>
             <span className="text-sm text-muted-foreground">
-              {(scrollbackLines / 1000).toFixed(0)}k lines
+              {(scrollbackLines / 1000).toFixed(0)}k Zeilen
             </span>
           </div>
           <Slider
@@ -130,8 +130,8 @@ export function TerminalSection() {
             step={1000}
             onValueChange={([value]) => setTerminalScrollbackLines(value)}
             onValueCommit={() => {
-              toast.info('Scrollback changed', {
-                description: 'Restart terminal for changes to take effect',
+              toast.info('Scrollback geändert', {
+                description: 'Terminal neu starten, damit Änderungen wirksam werden',
               });
             }}
             className="flex-1"
@@ -140,14 +140,15 @@ export function TerminalSection() {
 
         {/* Default Run Script */}
         <div className="space-y-3">
-          <Label className="text-foreground font-medium">Default Run Script</Label>
+          <Label className="text-foreground font-medium">Standard-Startskript</Label>
           <p className="text-xs text-muted-foreground">
-            Command to run automatically when opening a new terminal (e.g., "claude", "codex")
+            Befehl, der beim Öffnen eines neuen Terminals automatisch ausgeführt wird (z.B.
+            "claude", "codex")
           </p>
           <Input
             value={defaultRunScript}
             onChange={(e) => setTerminalDefaultRunScript(e.target.value)}
-            placeholder="e.g., claude, codex, npm run dev"
+            placeholder="z.B. claude, codex, npm run dev"
             className="bg-accent/30 border-border/50"
           />
         </div>
@@ -155,9 +156,9 @@ export function TerminalSection() {
         {/* Screen Reader Mode */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <Label className="text-foreground font-medium">Screen Reader Mode</Label>
+            <Label className="text-foreground font-medium">Screenreader-Modus</Label>
             <p className="text-xs text-muted-foreground">
-              Enable accessibility mode for screen readers
+              Barrierefreiheitsmodus für Screenreader aktivieren
             </p>
           </div>
           <Switch
@@ -165,9 +166,9 @@ export function TerminalSection() {
             onCheckedChange={(checked) => {
               setTerminalScreenReaderMode(checked);
               toast.success(
-                checked ? 'Screen reader mode enabled' : 'Screen reader mode disabled',
+                checked ? 'Screenreader-Modus aktiviert' : 'Screenreader-Modus deaktiviert',
                 {
-                  description: 'Restart terminal for changes to take effect',
+                  description: 'Terminal neu starten, damit Änderungen wirksam werden',
                 }
               );
             }}

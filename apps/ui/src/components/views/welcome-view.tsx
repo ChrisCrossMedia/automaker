@@ -78,8 +78,8 @@ export function WelcomeView() {
       const result = await api.autoMode.analyzeProject(projectPath);
 
       if (result.success) {
-        toast.success('Project analyzed', {
-          description: 'AI agent has analyzed your project structure',
+        toast.success('Projekt analysiert', {
+          description: 'KI-Agent hat deine Projektstruktur analysiert',
         });
       } else {
         logger.error('[Welcome] Project analysis failed:', result.error);
@@ -102,7 +102,7 @@ export function WelcomeView() {
         const initResult = await initializeProject(path);
 
         if (!initResult.success) {
-          toast.error('Failed to initialize project', {
+          toast.error('Projekt konnte nicht initialisiert werden', {
             description: initResult.error || 'Unknown error occurred',
           });
           return;
@@ -134,8 +134,8 @@ export function WelcomeView() {
           // Start analysis in background (don't await, let it run async)
           analyzeProject(path);
         } else {
-          toast.success('Project opened', {
-            description: `Opened ${name}`,
+          toast.success('Projekt geöffnet', {
+            description: `${name} geöffnet`,
           });
         }
 
@@ -143,8 +143,8 @@ export function WelcomeView() {
         navigate({ to: '/board' });
       } catch (error) {
         logger.error('[Welcome] Failed to open project:', error);
-        toast.error('Failed to open project', {
-          description: error instanceof Error ? error.message : 'Unknown error',
+        toast.error('Projekt konnte nicht geöffnet werden', {
+          description: error instanceof Error ? error.message : 'Unbekannter Fehler',
         });
       } finally {
         setIsOpening(false);
@@ -236,8 +236,8 @@ export function WelcomeView() {
       // Validate that parent directory exists
       const parentExists = await api.exists(parentDir);
       if (!parentExists) {
-        toast.error('Parent directory does not exist', {
-          description: `Cannot create project in non-existent directory: ${parentDir}`,
+        toast.error('Übergeordnetes Verzeichnis existiert nicht', {
+          description: `Kann Projekt nicht in nicht existierendem Verzeichnis erstellen: ${parentDir}`,
         });
         return;
       }
@@ -245,8 +245,8 @@ export function WelcomeView() {
       // Verify parent is actually a directory
       const parentStat = await api.stat(parentDir);
       if (parentStat && !parentStat.stats?.isDirectory) {
-        toast.error('Parent path is not a directory', {
-          description: `${parentDir} is not a directory`,
+        toast.error('Pfad ist kein Verzeichnis', {
+          description: `${parentDir} ist kein Verzeichnis`,
         });
         return;
       }
@@ -254,8 +254,8 @@ export function WelcomeView() {
       // Create project directory
       const mkdirResult = await api.mkdir(projectPath);
       if (!mkdirResult.success) {
-        toast.error('Failed to create project directory', {
-          description: mkdirResult.error || 'Unknown error occurred',
+        toast.error('Projektverzeichnis konnte nicht erstellt werden', {
+          description: mkdirResult.error || 'Unbekannter Fehler aufgetreten',
         });
         return;
       }
@@ -264,7 +264,7 @@ export function WelcomeView() {
       const initResult = await initializeProject(projectPath);
 
       if (!initResult.success) {
-        toast.error('Failed to initialize project', {
+        toast.error('Projekt konnte nicht initialisiert werden', {
           description: initResult.error || 'Unknown error occurred',
         });
         return;
@@ -307,8 +307,8 @@ export function WelcomeView() {
       setCurrentProject(project);
       setShowNewProjectModal(false);
 
-      toast.success('Project created', {
-        description: `Created ${projectName} with .automaker directory`,
+      toast.success('Projekt erstellt', {
+        description: `${projectName} mit .automaker-Verzeichnis erstellt`,
       });
 
       // Set init status to show the dialog
@@ -353,8 +353,8 @@ export function WelcomeView() {
       );
 
       if (!cloneResult.success || !cloneResult.projectPath) {
-        toast.error('Failed to clone template', {
-          description: cloneResult.error || 'Unknown error occurred',
+        toast.error('Vorlage konnte nicht geklont werden', {
+          description: cloneResult.error || 'Unbekannter Fehler aufgetreten',
         });
         return;
       }
@@ -365,7 +365,7 @@ export function WelcomeView() {
       const initResult = await initializeProject(projectPath);
 
       if (!initResult.success) {
-        toast.error('Failed to initialize project', {
+        toast.error('Projekt konnte nicht initialisiert werden', {
           description: initResult.error || 'Unknown error occurred',
         });
         return;
@@ -408,8 +408,8 @@ export function WelcomeView() {
       setCurrentProject(project);
       setShowNewProjectModal(false);
 
-      toast.success('Project created from template', {
-        description: `Created ${projectName} from ${template.name}`,
+      toast.success('Projekt aus Vorlage erstellt', {
+        description: `${projectName} aus ${template.name} erstellt`,
       });
 
       // Set init status to show the dialog
@@ -453,8 +453,8 @@ export function WelcomeView() {
       const cloneResult = await httpClient.templates.clone(repoUrl, projectName, parentDir);
 
       if (!cloneResult.success || !cloneResult.projectPath) {
-        toast.error('Failed to clone repository', {
-          description: cloneResult.error || 'Unknown error occurred',
+        toast.error('Repository konnte nicht geklont werden', {
+          description: cloneResult.error || 'Unbekannter Fehler aufgetreten',
         });
         return;
       }
@@ -465,7 +465,7 @@ export function WelcomeView() {
       const initResult = await initializeProject(projectPath);
 
       if (!initResult.success) {
-        toast.error('Failed to initialize project', {
+        toast.error('Projekt konnte nicht initialisiert werden', {
           description: initResult.error || 'Unknown error occurred',
         });
         return;
@@ -508,8 +508,8 @@ export function WelcomeView() {
       setCurrentProject(project);
       setShowNewProjectModal(false);
 
-      toast.success('Project created from repository', {
-        description: `Created ${projectName} from ${repoUrl}`,
+      toast.success('Projekt aus Repository erstellt', {
+        description: `${projectName} aus ${repoUrl} erstellt`,
       });
 
       // Set init status to show the dialog
@@ -555,10 +555,10 @@ export function WelcomeView() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                Welcome to Automaker
+                Willkommen bei Automaker
               </h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Your autonomous AI development studio
+                Dein autonomes KI-Entwicklungsstudio
               </p>
             </div>
           </div>
@@ -582,9 +582,9 @@ export function WelcomeView() {
                     <Plus className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-foreground mb-1.5">New Project</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-1.5">Neues Projekt</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Create a new project from scratch with AI-powered development
+                      Erstelle ein neues Projekt von Grund auf mit KI-gestützter Entwicklung
                     </p>
                   </div>
                 </div>
@@ -595,21 +595,21 @@ export function WelcomeView() {
                       data-testid="create-new-project"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Project
+                      Projekt erstellen
                       <ChevronDown className="w-4 h-4 ml-2" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuItem onClick={handleNewProject} data-testid="quick-setup-option">
                       <Plus className="w-4 h-4 mr-2" />
-                      Quick Setup
+                      Schnelleinrichtung
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleInteractiveMode}
                       data-testid="interactive-mode-option"
                     >
                       <MessageSquare className="w-4 h-4 mr-2" />
-                      Interactive Mode
+                      Interaktiver Modus
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -629,9 +629,9 @@ export function WelcomeView() {
                     <FolderOpen className="w-6 h-6 text-muted-foreground group-hover:text-blue-500 transition-colors duration-300" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-foreground mb-1.5">Open Project</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-1.5">Projekt öffnen</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Open an existing project folder to continue working
+                      Öffne einen bestehenden Projektordner, um weiterzuarbeiten
                     </p>
                   </div>
                 </div>
@@ -641,7 +641,7 @@ export function WelcomeView() {
                   data-testid="open-existing-project"
                 >
                   <FolderOpen className="w-4 h-4 mr-2" />
-                  Browse Folder
+                  Ordner durchsuchen
                 </Button>
               </div>
             </div>
@@ -654,7 +654,9 @@ export function WelcomeView() {
                 <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
                   <Clock className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <h2 className="text-lg font-semibold text-foreground">Recent Projects</h2>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Zuletzt verwendete Projekte
+                </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recentProjects.map((project, index) => (
@@ -698,9 +700,9 @@ export function WelcomeView() {
               <div className="w-20 h-20 rounded-2xl bg-muted/50 border border-border flex items-center justify-center mb-5">
                 <Sparkles className="w-10 h-10 text-muted-foreground/50" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">No projects yet</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Noch keine Projekte</h3>
               <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
-                Get started by creating a new project or opening an existing one
+                Starte, indem du ein neues Projekt erstellst oder ein bestehendes öffnest
               </p>
             </div>
           )}
@@ -728,17 +730,17 @@ export function WelcomeView() {
               <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-brand-500" />
               </div>
-              {initStatus?.isNewProject ? 'Project Initialized' : 'Project Updated'}
+              {initStatus?.isNewProject ? 'Projekt initialisiert' : 'Projekt aktualisiert'}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground mt-1">
               {initStatus?.isNewProject
-                ? `Created .automaker directory structure for ${initStatus?.projectName}`
-                : `Updated missing files in .automaker for ${initStatus?.projectName}`}
+                ? `.automaker-Verzeichnisstruktur für ${initStatus?.projectName} erstellt`
+                : `Fehlende Dateien in .automaker für ${initStatus?.projectName} aktualisiert`}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="space-y-3">
-              <p className="text-sm text-foreground font-medium">Created files:</p>
+              <p className="text-sm text-foreground font-medium">Erstellte Dateien:</p>
               <ul className="space-y-2">
                 {initStatus?.createdFiles.map((file) => (
                   <li
@@ -760,17 +762,17 @@ export function WelcomeView() {
                   <div className="flex items-center gap-3">
                     <Loader2 className="w-4 h-4 text-brand-500 animate-spin" />
                     <p className="text-sm text-brand-500">
-                      AI agent is analyzing your project structure...
+                      KI-Agent analysiert deine Projektstruktur...
                     </p>
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    <span className="text-brand-500 font-medium">Tip:</span> Edit the{' '}
+                    <span className="text-brand-500 font-medium">Tipp:</span> Bearbeite die{' '}
                     <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
                       app_spec.txt
                     </code>{' '}
-                    file to describe your project. The AI agent will use this to understand your
-                    project structure.
+                    Datei, um dein Projekt zu beschreiben. Der KI-Agent wird dies nutzen, um deine
+                    Projektstruktur zu verstehen.
                   </p>
                 )}
               </div>
@@ -782,7 +784,7 @@ export function WelcomeView() {
               className="bg-linear-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white border-0 shadow-md shadow-brand-500/20"
               data-testid="close-init-dialog"
             >
-              Get Started
+              Loslegen
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -803,7 +805,7 @@ export function WelcomeView() {
         >
           <div className="flex flex-col items-center gap-4 p-8 rounded-2xl bg-card border border-border shadow-2xl">
             <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
-            <p className="text-foreground font-medium">Initializing project...</p>
+            <p className="text-foreground font-medium">Projekt wird initialisiert...</p>
           </div>
         </div>
       )}

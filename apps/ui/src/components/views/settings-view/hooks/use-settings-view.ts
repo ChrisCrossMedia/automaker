@@ -10,13 +10,13 @@ export type SettingsViewId =
   | 'opencode-provider'
   | 'mcp-servers'
   | 'prompts'
-  | 'model-defaults'
+  | 'llm-mode'
   | 'appearance'
   | 'terminal'
   | 'keyboard'
   | 'audio'
-  | 'defaults'
   | 'worktrees'
+  | 'megabrain'
   | 'account'
   | 'security'
   | 'danger';
@@ -25,7 +25,7 @@ interface UseSettingsViewOptions {
   initialView?: SettingsViewId;
 }
 
-export function useSettingsView({ initialView = 'model-defaults' }: UseSettingsViewOptions = {}) {
+export function useSettingsView({ initialView = 'llm-mode' }: UseSettingsViewOptions = {}) {
   const [activeView, setActiveView] = useState<SettingsViewId>(initialView);
 
   const navigateTo = useCallback((viewId: SettingsViewId) => {

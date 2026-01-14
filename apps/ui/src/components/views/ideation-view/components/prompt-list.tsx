@@ -52,7 +52,7 @@ export function PromptList({ category, onBack }: PromptListProps) {
 
   const handleSelectPrompt = async (prompt: IdeationPrompt) => {
     if (!currentProject?.path) {
-      toast.error('No project selected');
+      toast.error('Kein Projekt ausgewählt');
       return;
     }
 
@@ -64,8 +64,8 @@ export function PromptList({ category, onBack }: PromptListProps) {
     const jobId = addGenerationJob(currentProject.path, prompt);
     setStartedPrompts((prev) => new Set(prev).add(prompt.id));
 
-    // Show toast and navigate to dashboard
-    toast.info(`Generating ideas for "${prompt.title}"...`);
+    // Toast anzeigen und zum Dashboard navigieren
+    toast.info(`Generiere Ideen für "${prompt.title}"...`);
     setMode('dashboard');
 
     try {
@@ -78,10 +78,10 @@ export function PromptList({ category, onBack }: PromptListProps) {
 
       if (result?.success && result.suggestions) {
         updateJobStatus(jobId, 'ready', result.suggestions);
-        toast.success(`Generated ${result.suggestions.length} ideas for "${prompt.title}"`, {
+        toast.success(`${result.suggestions.length} Ideen für "${prompt.title}" generiert`, {
           duration: 10000,
           action: {
-            label: 'View Ideas',
+            label: 'Ideen ansehen',
             onClick: () => {
               setMode('dashboard');
               navigate({ to: '/ideation' });
@@ -93,9 +93,9 @@ export function PromptList({ category, onBack }: PromptListProps) {
           jobId,
           'error',
           undefined,
-          result?.error || 'Failed to generate suggestions'
+          result?.error || 'Ideen konnten nicht generiert werden'
         );
-        toast.error(result?.error || 'Failed to generate suggestions');
+        toast.error(result?.error || 'Ideen konnten nicht generiert werden');
       }
     } catch (error) {
       console.error('Failed to generate suggestions:', error);
@@ -109,25 +109,25 @@ export function PromptList({ category, onBack }: PromptListProps) {
   return (
     <div className="flex-1 flex flex-col p-6 overflow-auto">
       <div className="max-w-3xl w-full mx-auto space-y-4">
-        {/* Back link */}
+        {/* Zurück-Link */}
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
+          <span>Zurück</span>
         </button>
 
         <div className="space-y-3">
           {isLoadingPrompts && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Loading prompts...</span>
+              <span className="ml-2 text-muted-foreground">Lade Prompts...</span>
             </div>
           )}
           {promptsError && (
             <div className="text-center py-8 text-destructive">
-              <p>Failed to load prompts: {promptsError}</p>
+              <p>Prompts konnten nicht geladen werden: {promptsError}</p>
             </div>
           )}
           {!isLoadingPrompts &&
@@ -173,11 +173,13 @@ export function PromptList({ category, onBack }: PromptListProps) {
                         <h3 className="font-semibold">{prompt.title}</h3>
                         <p className="text-muted-foreground text-sm mt-1">{prompt.description}</p>
                         {(isLoading || isGenerating) && (
-                          <p className="text-blue-500 text-sm mt-2">Generating in dashboard...</p>
+                          <p className="text-blue-500 text-sm mt-2">
+                            Wird im Dashboard generiert...
+                          </p>
                         )}
                         {isStarted && !isGenerating && (
                           <p className="text-green-500 text-sm mt-2">
-                            Already generated - check dashboard
+                            Bereits generiert - siehe Dashboard
                           </p>
                         )}
                       </div>

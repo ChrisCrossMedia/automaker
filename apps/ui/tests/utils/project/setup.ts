@@ -348,7 +348,7 @@ export async function setupMockProjectWithFeatures(
 
     // Also store features in a global variable that the mock electron API can use
     // This is needed because the board-view loads features from the file system
-    (window as any).__mockFeatures = mockFeatures;
+    (window as unknown as { __mockFeatures: typeof mockFeatures }).__mockFeatures = mockFeatures;
 
     // Disable splash screen in tests
     sessionStorage.setItem('automaker-splash-shown', 'true');
@@ -395,7 +395,11 @@ export async function setupMockProjectWithContextFile(
       // Set up mock file system with a context file for the feature
       // This will be used by the mock electron API
       // Now uses features/{id}/agent-output.md path
-      (window as any).__mockContextFile = {
+      (
+        window as unknown as {
+          __mockContextFile: { featureId: string; path: string; content: string };
+        }
+      ).__mockContextFile = {
         featureId,
         path: `/mock/test-project/.automaker/features/${featureId}/agent-output.md`,
         content: contextContent,
@@ -455,7 +459,7 @@ export async function setupMockProjectWithInProgressFeatures(
 
     // Also store features in a global variable that the mock electron API can use
     // This is needed because the board-view loads features from the file system
-    (window as any).__mockFeatures = mockFeatures;
+    (window as unknown as { __mockFeatures: typeof mockFeatures }).__mockFeatures = mockFeatures;
   }, options);
 }
 
@@ -687,7 +691,11 @@ export async function setupMockProjectWithAgentOutput(
 
       // Set up mock file system with output content for the feature
       // Now uses features/{id}/agent-output.md path
-      (window as any).__mockContextFile = {
+      (
+        window as unknown as {
+          __mockContextFile: { featureId: string; path: string; content: string };
+        }
+      ).__mockContextFile = {
         featureId,
         path: `/mock/test-project/.automaker/features/${featureId}/agent-output.md`,
         content: outputContent,
@@ -747,7 +755,7 @@ export async function setupMockProjectWithWaitingApprovalFeatures(
     localStorage.setItem('automaker-storage', JSON.stringify(mockState));
 
     // Also store features in a global variable that the mock electron API can use
-    (window as any).__mockFeatures = mockFeatures;
+    (window as unknown as { __mockFeatures: typeof mockFeatures }).__mockFeatures = mockFeatures;
   }, options);
 }
 

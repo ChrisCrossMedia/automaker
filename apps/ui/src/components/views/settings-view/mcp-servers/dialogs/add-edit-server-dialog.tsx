@@ -43,9 +43,12 @@ export function AddEditServerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="mcp-server-dialog">
         <DialogHeader>
-          <DialogTitle>{editingServer ? 'Edit MCP Server' : 'Add MCP Server'}</DialogTitle>
+          <DialogTitle>
+            {editingServer ? 'MCP-Server bearbeiten' : 'MCP-Server hinzufügen'}
+          </DialogTitle>
           <DialogDescription>
-            Configure an MCP server to extend agent capabilities with custom tools.
+            Konfiguriere einen MCP-Server, um Agent-Fähigkeiten mit benutzerdefinierten Tools zu
+            erweitern.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -60,17 +63,17 @@ export function AddEditServerDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="server-description">Description (optional)</Label>
+            <Label htmlFor="server-description">Beschreibung (optional)</Label>
             <Input
               id="server-description"
               value={formData.description}
               onChange={(e) => onFormDataChange({ ...formData, description: e.target.value })}
-              placeholder="What this server provides..."
+              placeholder="Was dieser Server bereitstellt..."
               data-testid="mcp-server-description-input"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="server-type">Transport Type</Label>
+            <Label htmlFor="server-type">Transport-Typ</Label>
             <Select
               value={formData.type}
               onValueChange={(value: ServerType) => onFormDataChange({ ...formData, type: value })}
@@ -79,7 +82,7 @@ export function AddEditServerDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="stdio">Stdio (subprocess)</SelectItem>
+                <SelectItem value="stdio">Stdio (Subprozess)</SelectItem>
                 <SelectItem value="sse">SSE (Server-Sent Events)</SelectItem>
                 <SelectItem value="http">HTTP</SelectItem>
               </SelectContent>
@@ -88,7 +91,7 @@ export function AddEditServerDialog({
           {formData.type === 'stdio' ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="server-command">Command</Label>
+                <Label htmlFor="server-command">Befehl</Label>
                 <Input
                   id="server-command"
                   value={formData.command}
@@ -98,7 +101,7 @@ export function AddEditServerDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="server-args">Arguments (space-separated)</Label>
+                <Label htmlFor="server-args">Argumente (durch Leerzeichen getrennt)</Label>
                 <Input
                   id="server-args"
                   value={formData.args}
@@ -108,7 +111,7 @@ export function AddEditServerDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="server-env">Environment Variables (JSON, optional)</Label>
+                <Label htmlFor="server-env">Umgebungsvariablen (JSON, optional)</Label>
                 <Textarea
                   id="server-env"
                   value={formData.env}
@@ -132,7 +135,7 @@ export function AddEditServerDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="server-headers">Headers (JSON, optional)</Label>
+                <Label htmlFor="server-headers">Header (JSON, optional)</Label>
                 <Textarea
                   id="server-headers"
                   value={formData.headers}
@@ -149,10 +152,10 @@ export function AddEditServerDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            Abbrechen
           </Button>
           <Button onClick={onSave} data-testid="mcp-server-save-button">
-            {editingServer ? 'Save Changes' : 'Add Server'}
+            {editingServer ? 'Änderungen speichern' : 'Server hinzufügen'}
           </Button>
         </DialogFooter>
       </DialogContent>

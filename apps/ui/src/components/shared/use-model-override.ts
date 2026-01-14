@@ -38,16 +38,6 @@ function normalizeEntry(entry: PhaseModelEntry | string): PhaseModelEntry {
 }
 
 /**
- * Extract model string from PhaseModelEntry or string
- */
-function extractModel(entry: PhaseModelEntry | string): ModelAlias | CursorModelId {
-  if (typeof entry === 'string') {
-    return entry as ModelAlias | CursorModelId;
-  }
-  return entry.model;
-}
-
-/**
  * Hook for managing model overrides per phase
  *
  * Provides a simple way to allow users to override the global phase model
