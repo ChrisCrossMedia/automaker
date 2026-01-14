@@ -21,29 +21,53 @@ describe('enhancement.ts', () => {
     it('should export IMPROVE_SYSTEM_PROMPT', () => {
       expect(IMPROVE_SYSTEM_PROMPT).toBeDefined();
       expect(typeof IMPROVE_SYSTEM_PROMPT).toBe('string');
-      expect(IMPROVE_SYSTEM_PROMPT).toContain('vague, unclear');
-      expect(IMPROVE_SYSTEM_PROMPT).toContain('actionable');
+      // Deutsche Version: vage/unklar, umsetzbar
+      expect(
+        IMPROVE_SYSTEM_PROMPT.includes('vague, unclear') || IMPROVE_SYSTEM_PROMPT.includes('vage')
+      ).toBe(true);
+      expect(
+        IMPROVE_SYSTEM_PROMPT.includes('actionable') || IMPROVE_SYSTEM_PROMPT.includes('umsetzbar')
+      ).toBe(true);
     });
 
     it('should export TECHNICAL_SYSTEM_PROMPT', () => {
       expect(TECHNICAL_SYSTEM_PROMPT).toBeDefined();
       expect(typeof TECHNICAL_SYSTEM_PROMPT).toBe('string');
-      expect(TECHNICAL_SYSTEM_PROMPT).toContain('technical');
-      expect(TECHNICAL_SYSTEM_PROMPT).toContain('implementation');
+      // Deutsche Version: technisch, Implementierung
+      expect(
+        TECHNICAL_SYSTEM_PROMPT.includes('technical') ||
+          TECHNICAL_SYSTEM_PROMPT.includes('technisch')
+      ).toBe(true);
+      expect(
+        TECHNICAL_SYSTEM_PROMPT.includes('implementation') ||
+          TECHNICAL_SYSTEM_PROMPT.includes('Implementierung')
+      ).toBe(true);
     });
 
     it('should export SIMPLIFY_SYSTEM_PROMPT', () => {
       expect(SIMPLIFY_SYSTEM_PROMPT).toBeDefined();
       expect(typeof SIMPLIFY_SYSTEM_PROMPT).toBe('string');
-      expect(SIMPLIFY_SYSTEM_PROMPT).toContain('verbose');
-      expect(SIMPLIFY_SYSTEM_PROMPT).toContain('concise');
+      // Deutsche Version: ausführlich/überflüssig, prägnant/fokussiert
+      expect(
+        SIMPLIFY_SYSTEM_PROMPT.includes('verbose') || SIMPLIFY_SYSTEM_PROMPT.includes('ausführlich')
+      ).toBe(true);
+      expect(
+        SIMPLIFY_SYSTEM_PROMPT.includes('concise') || SIMPLIFY_SYSTEM_PROMPT.includes('prägnant')
+      ).toBe(true);
     });
 
     it('should export ACCEPTANCE_SYSTEM_PROMPT', () => {
       expect(ACCEPTANCE_SYSTEM_PROMPT).toBeDefined();
       expect(typeof ACCEPTANCE_SYSTEM_PROMPT).toBe('string');
-      expect(ACCEPTANCE_SYSTEM_PROMPT).toContain('acceptance criteria');
-      expect(ACCEPTANCE_SYSTEM_PROMPT).toContain('testable');
+      // Deutsche Version: Akzeptanzkriterien, testbar
+      expect(
+        ACCEPTANCE_SYSTEM_PROMPT.includes('acceptance criteria') ||
+          ACCEPTANCE_SYSTEM_PROMPT.includes('Akzeptanzkriterien')
+      ).toBe(true);
+      expect(
+        ACCEPTANCE_SYSTEM_PROMPT.includes('testable') ||
+          ACCEPTANCE_SYSTEM_PROMPT.includes('testbar')
+      ).toBe(true);
     });
   });
 
@@ -117,8 +141,9 @@ describe('enhancement.ts', () => {
       expect(result).toHaveProperty('systemPrompt');
       expect(result).toHaveProperty('description');
       expect(result.systemPrompt).toBe(IMPROVE_SYSTEM_PROMPT);
-      expect(result.description).toContain('vague');
-      expect(result.description).toContain('actionable');
+      // Deutsche Beschreibung: "Transformiere vage Anfragen in klare, umsetzbare Aufgabenbeschreibungen"
+      expect(result.description).toContain('vage');
+      expect(result.description).toContain('umsetzbar');
     });
 
     it("should return prompt config for 'technical' mode", () => {
@@ -127,7 +152,8 @@ describe('enhancement.ts', () => {
       expect(result).toHaveProperty('systemPrompt');
       expect(result).toHaveProperty('description');
       expect(result.systemPrompt).toBe(TECHNICAL_SYSTEM_PROMPT);
-      expect(result.description).toContain('implementation');
+      // Deutsche Beschreibung: "Füge technische Implementierungsdetails..."
+      expect(result.description).toContain('Implementierung');
     });
 
     it("should return prompt config for 'simplify' mode", () => {
@@ -136,7 +162,8 @@ describe('enhancement.ts', () => {
       expect(result).toHaveProperty('systemPrompt');
       expect(result).toHaveProperty('description');
       expect(result.systemPrompt).toBe(SIMPLIFY_SYSTEM_PROMPT);
-      expect(result.description).toContain('verbose');
+      // Deutsche Beschreibung: "Mache ausführliche Beschreibungen prägnant und fokussiert"
+      expect(result.description).toContain('prägnant');
     });
 
     it("should return prompt config for 'acceptance' mode", () => {
@@ -145,7 +172,8 @@ describe('enhancement.ts', () => {
       expect(result).toHaveProperty('systemPrompt');
       expect(result).toHaveProperty('description');
       expect(result.systemPrompt).toBe(ACCEPTANCE_SYSTEM_PROMPT);
-      expect(result.description).toContain('acceptance');
+      // Deutsche Beschreibung: "Füge testbare Akzeptanzkriterien..."
+      expect(result.description).toContain('Akzeptanzkriterien');
     });
 
     it('should handle uppercase mode', () => {
@@ -164,7 +192,8 @@ describe('enhancement.ts', () => {
       const result = getEnhancementPrompt('invalid-mode');
 
       expect(result.systemPrompt).toBe(IMPROVE_SYSTEM_PROMPT);
-      expect(result.description).toContain('vague');
+      // Deutsche Beschreibung
+      expect(result.description).toContain('vage');
     });
 
     it("should fall back to 'improve' for empty string", () => {
@@ -509,16 +538,22 @@ describe('enhancement.ts', () => {
 
     it('ACCEPTANCE_EXAMPLES should contain acceptance criteria format', () => {
       ACCEPTANCE_EXAMPLES.forEach((example) => {
-        // Should contain numbered criteria or Given-When-Then format
+        // Should contain numbered criteria or Given-When-Then format (German: Akzeptanzkriterien)
         const hasAcceptanceCriteria =
-          example.output.includes('Acceptance Criteria') || example.output.match(/\d+\./g);
+          example.output.includes('Acceptance Criteria') ||
+          example.output.includes('Akzeptanzkriterien') ||
+          example.output.match(/\d+\./g);
         expect(hasAcceptanceCriteria).toBeTruthy();
 
-        // Should contain Given-When-Then format
+        // Should contain Given-When-Then format (German: Gegeben-wenn-dann, case-insensitive)
+        const outputLower = example.output.toLowerCase();
         const hasGWT =
-          example.output.includes('Given') &&
-          example.output.includes('when') &&
-          example.output.includes('then');
+          (outputLower.includes('given') &&
+            outputLower.includes('when') &&
+            outputLower.includes('then')) ||
+          (outputLower.includes('gegeben') &&
+            outputLower.includes('wenn') &&
+            outputLower.includes('dann'));
         expect(hasGWT).toBe(true);
       });
     });
