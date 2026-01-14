@@ -387,6 +387,15 @@ export interface SpecRegenerationAPI {
 }
 
 export interface AutoModeAPI {
+  start: (
+    projectPath: string,
+    maxConcurrency?: number
+  ) => Promise<{ success: boolean; error?: string }>;
+
+  stop: (
+    projectPath: string
+  ) => Promise<{ success: boolean; error?: string; runningFeatures?: number }>;
+
   stopFeature: (featureId: string) => Promise<{
     success: boolean;
     error?: string;
@@ -405,7 +414,8 @@ export interface AutoModeAPI {
   runFeature: (
     projectPath: string,
     featureId: string,
-    useWorktrees?: boolean
+    useWorktrees?: boolean,
+    worktreePath?: string
   ) => Promise<{
     success: boolean;
     passes?: boolean;
@@ -451,7 +461,7 @@ export interface AutoModeAPI {
     featureId: string,
     prompt: string,
     imagePaths?: string[],
-    useWorktrees?: boolean
+    worktreePath?: string
   ) => Promise<{
     success: boolean;
     passes?: boolean;
@@ -460,7 +470,8 @@ export interface AutoModeAPI {
 
   commitFeature: (
     projectPath: string,
-    featureId: string
+    featureId: string,
+    worktreePath?: string
   ) => Promise<{
     success: boolean;
     error?: string;
@@ -476,6 +487,10 @@ export interface AutoModeAPI {
     success: boolean;
     error?: string;
   }>;
+
+  resumeInterrupted: (
+    projectPath: string
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
 
   onEvent: (callback: (event: AutoModeEvent) => void) => () => void;
 }
@@ -613,6 +628,20 @@ export interface ElectronAPI {
   // Codex Usage API
   codex: {
     getUsage: () => Promise<CodexUsageResponse>;
+    getModels: (refresh?: boolean) => Promise<{
+      success: boolean;
+      models?: Array<{
+        id: string;
+        label: string;
+        description: string;
+        hasThinking: boolean;
+        supportsVision: boolean;
+        tier: 'premium' | 'standard' | 'basic';
+        isDefault: boolean;
+      }>;
+      cachedAt?: number;
+      error?: string;
+    }>;
   };
 
   // Worktree Management APIs

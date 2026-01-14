@@ -836,12 +836,14 @@ export interface ElectronAPI {
 // Do not redeclare here to avoid type conflicts
 
 // Mock data for web development
-const mockFeatures = [
+const mockFeatures: Feature[] = [
   {
+    id: 'mock-feature-1',
     category: 'Core',
     description: 'Sample Feature',
-    steps: ['Step 1', 'Step 2'],
+    status: 'backlog',
     passes: false,
+    steps: [],
   },
 ];
 
@@ -1860,7 +1862,14 @@ function createMockWorktreeAPI(): WorktreeAPI {
 
     createPR: async (
       worktreePath: string,
-      options?: { title?: string; body?: string; base?: string }
+      options?: {
+        projectPath?: string;
+        commitMessage?: string;
+        prTitle?: string;
+        prBody?: string;
+        baseBranch?: string;
+        draft?: boolean;
+      }
     ) => {
       console.log('[Mock] Creating PR:', { worktreePath, options });
       return {

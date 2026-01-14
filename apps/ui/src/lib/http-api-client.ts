@@ -2029,8 +2029,17 @@ export class HttpApiClient implements ElectronAPI {
       this.post('/api/worktree/commit', { worktreePath, message }),
     push: (worktreePath: string, force?: boolean) =>
       this.post('/api/worktree/push', { worktreePath, force }),
-    createPR: (worktreePath: string, options?: { title?: string; body?: string; base?: string }) =>
-      this.post('/api/worktree/create-pr', { worktreePath, ...options }),
+    createPR: (
+      worktreePath: string,
+      options?: {
+        projectPath?: string;
+        commitMessage?: string;
+        prTitle?: string;
+        prBody?: string;
+        baseBranch?: string;
+        draft?: boolean;
+      }
+    ) => this.post('/api/worktree/create-pr', { worktreePath, ...options }),
     getDiffs: (projectPath: string, featureId: string) =>
       this.post('/api/worktree/diffs', { projectPath, featureId }),
     getFileDiff: (projectPath: string, featureId: string, filePath: string) =>
