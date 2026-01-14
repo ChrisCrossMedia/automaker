@@ -222,6 +222,7 @@ class MegabrainServiceClass {
 
   /**
    * Query MEGABRAIN RAG for context
+   * Updated 2026-01-14: Use correct endpoint /api/v1/memory/retrieve
    */
   async queryRAG(query: string, collection?: string): Promise<string[]> {
     if (!this.settings.enabled || !this.settings.ragEnabled) {
@@ -229,13 +230,13 @@ class MegabrainServiceClass {
     }
 
     try {
-      const response = await fetch(`${this.settings.apiUrl}/api/v1/memory/search`, {
+      const response = await fetch(`${this.settings.apiUrl}/api/v1/memory/retrieve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query,
-          collection: collection || 'automaker_knowledge',
           limit: 5,
+          agent_id: collection || 'automaker',
         }),
       });
 
@@ -243,8 +244,8 @@ class MegabrainServiceClass {
         throw new Error(`RAG query failed: ${response.status}`);
       }
 
-      const data = (await response.json()) as { results?: string[] };
-      return data.results || [];
+      const data = (await response.json()) as { memories?: Array<{ content: string }> };
+      return (data.memories || []).map((m) => m.content);
     } catch (error) {
       logger.error('RAG query failed:', error);
       return [];
@@ -252,7 +253,8 @@ class MegabrainServiceClass {
   }
 
   /**
-   * Execute a MEGABRAIN skill
+   * Execute a MEGABRAIN skill/agent
+   * Updated 2026-01-14: Use correct endpoint /agents/execute
    */
   async executeSkill(skillName: string, params: Record<string, unknown>): Promise<unknown> {
     if (!this.settings.enabled || !this.settings.skillsEnabled) {
@@ -260,12 +262,13 @@ class MegabrainServiceClass {
     }
 
     try {
-      const response = await fetch(`${this.settings.apiUrl}/api/v1/skills/execute`, {
+      const response = await fetch(`${this.settings.apiUrl}/agents/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          skill: skillName,
-          params,
+          agent_type: skillName,
+          input_data: params,
+          store_result: true,
         }),
       });
 
@@ -282,10 +285,11 @@ class MegabrainServiceClass {
 
   /**
    * Run Advocatus Diaboli review
+   * Updated 2026-01-14: Use correct endpoint /agents/review
    */
   async runAdvocatusReview(
-    code: string,
-    context?: string
+    filePath: string,
+    require100: boolean = true
   ): Promise<{
     score: number;
     feedback: string[];
@@ -296,13 +300,13 @@ class MegabrainServiceClass {
     }
 
     try {
-      const response = await fetch(`${this.settings.apiUrl}/api/v1/advocatus/review`, {
+      const response = await fetch(`${this.settings.apiUrl}/agents/review`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code,
-          context,
-          require_score: 100,
+          file_path: filePath,
+          require_100: require100,
+          store_review: true,
         }),
       });
 
@@ -310,11 +314,16 @@ class MegabrainServiceClass {
         throw new Error(`Advocatus review failed: ${response.status}`);
       }
 
-      const result = (await response.json()) as { score?: number; feedback?: string[] };
+      const result = (await response.json()) as {
+        score?: number;
+        passed?: boolean;
+        critical_issues?: string[];
+        summary?: string;
+      };
       return {
         score: result.score || 0,
-        feedback: result.feedback || [],
-        approved: (result.score || 0) >= 100,
+        feedback: result.critical_issues || (result.summary ? [result.summary] : []),
+        approved: result.passed ?? (result.score || 0) >= 100,
       };
     } catch (error) {
       logger.error('Advocatus review failed:', error);
