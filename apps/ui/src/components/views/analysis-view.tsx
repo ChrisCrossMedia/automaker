@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { createLogger } from '@automaker/utils/logger';
-import { useAppStore, FileTreeNode, ProjectAnalysis } from '@/store/app-store';
+import { useAppStore, FileTreeNode, ProjectAnalysis, Feature } from '@/store/app-store';
 import { getElectronAPI } from '@/lib/electron';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -642,7 +642,8 @@ ${Object.entries(projectAnalysis.filesByExtension)
           category: detectedFeature.category,
           description: detectedFeature.description,
           status: 'backlog',
-        });
+          steps: [], // Required field for UI Feature type
+        } as Feature);
       }
 
       setFeatureListGenerated(true);

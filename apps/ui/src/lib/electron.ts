@@ -1295,6 +1295,100 @@ interface SetupAPI {
     message?: string;
     output?: string;
   }>;
+  deauthClaude: () => Promise<{
+    success: boolean;
+    error?: string;
+    message?: string;
+  }>;
+  authCodex: () => Promise<{
+    success: boolean;
+    token?: string;
+    requiresManualAuth?: boolean;
+    terminalOpened?: boolean;
+    command?: string;
+    error?: string;
+    message?: string;
+    output?: string;
+  }>;
+  deauthCodex: () => Promise<{
+    success: boolean;
+    error?: string;
+    message?: string;
+  }>;
+  authCursor: () => Promise<{
+    success: boolean;
+    token?: string;
+    requiresManualAuth?: boolean;
+    terminalOpened?: boolean;
+    command?: string;
+    error?: string;
+    message?: string;
+    output?: string;
+  }>;
+  deauthCursor: () => Promise<{
+    success: boolean;
+    error?: string;
+    message?: string;
+  }>;
+  getCodexStatus: () => Promise<{
+    success: boolean;
+    status?: string;
+    installed?: boolean;
+    version?: string;
+    path?: string;
+    error?: string;
+    recommendation?: string;
+    installCommands?: {
+      macos?: string;
+      windows?: string;
+      linux?: string;
+      npm?: string;
+    };
+    auth?: {
+      authenticated: boolean;
+      method?: string;
+      hasApiKey?: boolean;
+      hasEnvApiKey?: boolean;
+    };
+  }>;
+  getOpencodeStatus: () => Promise<{
+    success: boolean;
+    status?: string;
+    installed?: boolean;
+    version?: string;
+    path?: string;
+    error?: string;
+    recommendation?: string;
+    installCommands?: {
+      macos?: string;
+      windows?: string;
+      linux?: string;
+      npm?: string;
+    };
+    auth?: {
+      authenticated: boolean;
+      method?: string;
+      hasApiKey?: boolean;
+      hasEnvApiKey?: boolean;
+      hasModel?: boolean;
+      hasProvider?: boolean;
+    };
+  }>;
+  getOpencodeProviders: () => Promise<{
+    success: boolean;
+    providers?: Array<{
+      id: string;
+      name: string;
+      authenticated: boolean;
+      authMethod?: string;
+    }>;
+    error?: string;
+  }>;
+  getOpencodeModels: (provider: string) => Promise<{
+    success: boolean;
+    models?: string[];
+    error?: string;
+  }>;
   storeApiKey: (provider: string, apiKey: string) => Promise<{ success: boolean; error?: string }>;
   getApiKeys: () => Promise<{
     success: boolean;
@@ -1368,6 +1462,100 @@ function createMockSetupAPI(): SetupAPI {
         success: true,
         requiresManualAuth: true,
         command: 'claude login',
+      };
+    },
+
+    deauthClaude: async () => {
+      console.log('[Mock] Deauth Claude CLI');
+      return {
+        success: true,
+        message: 'Signed out from Claude CLI (mock)',
+      };
+    },
+
+    authCodex: async () => {
+      console.log('[Mock] Auth Codex CLI');
+      return {
+        success: true,
+        requiresManualAuth: true,
+        command: 'codex login',
+      };
+    },
+
+    deauthCodex: async () => {
+      console.log('[Mock] Deauth Codex CLI');
+      return {
+        success: true,
+        message: 'Signed out from Codex CLI (mock)',
+      };
+    },
+
+    authCursor: async () => {
+      console.log('[Mock] Auth Cursor CLI');
+      return {
+        success: true,
+        requiresManualAuth: true,
+        command: 'cursor login',
+      };
+    },
+
+    deauthCursor: async () => {
+      console.log('[Mock] Deauth Cursor CLI');
+      return {
+        success: true,
+        message: 'Signed out from Cursor CLI (mock)',
+      };
+    },
+
+    getCodexStatus: async () => {
+      console.log('[Mock] Get Codex Status');
+      return {
+        success: true,
+        status: 'not_installed',
+        installed: false,
+        recommendation: 'Install Codex CLI via npm',
+        installCommands: {
+          npm: 'npm install -g @openai/codex',
+        },
+        auth: {
+          authenticated: false,
+        },
+      };
+    },
+
+    getOpencodeStatus: async () => {
+      console.log('[Mock] Get Opencode Status');
+      return {
+        success: true,
+        status: 'not_installed',
+        installed: false,
+        recommendation: 'Install Opencode CLI',
+        installCommands: {
+          npm: 'npm install -g opencode',
+        },
+        auth: {
+          authenticated: false,
+        },
+      };
+    },
+
+    getOpencodeProviders: async () => {
+      console.log('[Mock] Get Opencode Providers');
+      return {
+        success: true,
+        providers: [
+          { id: 'openai', name: 'OpenAI', authenticated: false },
+          { id: 'anthropic', name: 'Anthropic', authenticated: false },
+          { id: 'google', name: 'Google', authenticated: false },
+        ],
+      };
+    },
+
+    getOpencodeModels: async (_provider: string) => {
+      console.log('[Mock] Get Opencode Models');
+      return {
+        success: true,
+        models: ['gpt-4', 'gpt-3.5-turbo'],
       };
     },
 

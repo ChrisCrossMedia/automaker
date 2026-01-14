@@ -66,9 +66,9 @@ export function CodexSettingsTab() {
             installCommands: result.installCommands,
           });
           setCodexCliStatus({
-            installed: result.installed,
-            version: result.version,
-            path: result.path,
+            installed: result.installed ?? false,
+            version: result.version ?? null,
+            path: result.path ?? null,
             method: result.auth?.method || 'none',
           });
           if (result.auth) {
@@ -107,9 +107,9 @@ export function CodexSettingsTab() {
           installCommands: result.installCommands,
         });
         setCodexCliStatus({
-          installed: result.installed,
-          version: result.version,
-          path: result.path,
+          installed: result.installed ?? false,
+          version: result.version ?? null,
+          path: result.path ?? null,
           method: result.auth?.method || 'none',
         });
         if (result.auth) {

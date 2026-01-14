@@ -211,6 +211,9 @@ export function CursorCliStatus({ status, isChecking, onRefresh }: CursorCliStat
     setIsAuthenticating(true);
     try {
       const api = getElectronAPI();
+      if (!api.setup) {
+        throw new Error('Setup API not available');
+      }
       const result = await api.setup.authCursor();
 
       if (result.success) {
@@ -236,6 +239,9 @@ export function CursorCliStatus({ status, isChecking, onRefresh }: CursorCliStat
     setIsDeauthenticating(true);
     try {
       const api = getElectronAPI();
+      if (!api.setup) {
+        throw new Error('Setup API not available');
+      }
       const result = await api.setup.deauthCursor();
 
       if (result.success) {

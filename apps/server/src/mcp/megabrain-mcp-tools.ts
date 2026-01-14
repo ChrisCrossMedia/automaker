@@ -150,9 +150,9 @@ export async function executeMegabrainTool(
         }
 
         const code = params.code as string;
-        const context = params.context as string | undefined;
+        const require100 = params.require100 !== false; // Default to true
 
-        const result = await MegabrainService.runAdvocatusReview(code, context);
+        const result = await MegabrainService.runAdvocatusReview(code, require100);
 
         return {
           success: true,

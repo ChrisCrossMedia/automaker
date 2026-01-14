@@ -91,6 +91,9 @@ export function ClaudeCliStatus({ status, authStatus, isChecking, onRefresh }: C
     setIsAuthenticating(true);
     try {
       const api = getElectronAPI();
+      if (!api.setup) {
+        throw new Error('Setup API not available');
+      }
       const result = await api.setup.authClaude();
 
       if (result.success) {
@@ -116,6 +119,9 @@ export function ClaudeCliStatus({ status, authStatus, isChecking, onRefresh }: C
     setIsDeauthenticating(true);
     try {
       const api = getElectronAPI();
+      if (!api.setup) {
+        throw new Error('Setup API not available');
+      }
       const result = await api.setup.deauthClaude();
 
       if (result.success) {

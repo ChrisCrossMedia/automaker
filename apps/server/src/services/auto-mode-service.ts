@@ -3375,7 +3375,7 @@ Type: ${feature.type || 'feature'}
 Branch: ${feature.branchName || 'N/A'}
 `;
 
-      const result = await MegabrainService.runAdvocatusReview(reviewContent, feature.title);
+      const result = await MegabrainService.runAdvocatusReview(reviewContent, true);
 
       // Emit event for UI
       this.emitAutoModeEvent('auto_mode_advocatus_review', {

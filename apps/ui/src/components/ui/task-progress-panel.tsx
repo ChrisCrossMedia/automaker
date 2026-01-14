@@ -71,6 +71,12 @@ export function TaskProgressPanel({
         const currentId = planSpec.currentTaskId;
         const completedCount = planSpec.tasksCompleted || 0;
 
+        // Guard against undefined tasks
+        if (!planTasks) {
+          setIsLoading(false);
+          return;
+        }
+
         // Convert planSpec tasks to TaskInfo with proper status
         const initialTasks: TaskInfo[] = planTasks.map((t, index: number) => ({
           id: t.id,

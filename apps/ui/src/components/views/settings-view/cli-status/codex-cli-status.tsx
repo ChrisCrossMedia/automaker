@@ -86,6 +86,9 @@ export function CodexCliStatus({ status, authStatus, isChecking, onRefresh }: Cl
     setIsAuthenticating(true);
     try {
       const api = getElectronAPI();
+      if (!api.setup) {
+        throw new Error('Setup API not available');
+      }
       const result = await api.setup.authCodex();
 
       if (result.success) {
@@ -111,6 +114,9 @@ export function CodexCliStatus({ status, authStatus, isChecking, onRefresh }: Cl
     setIsDeauthenticating(true);
     try {
       const api = getElectronAPI();
+      if (!api.setup) {
+        throw new Error('Setup API not available');
+      }
       const result = await api.setup.deauthCodex();
 
       if (result.success) {
