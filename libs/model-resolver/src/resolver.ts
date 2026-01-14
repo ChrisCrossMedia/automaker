@@ -17,6 +17,7 @@ import {
   isCursorModel,
   isOpencodeModel,
   stripProviderPrefix,
+  type ModelProvider,
   type PhaseModelEntry,
   type ThinkingLevel,
 } from '@automaker/types';
@@ -143,6 +144,8 @@ export interface ResolvedPhaseModel {
   model: string;
   /** Optional thinking level for extended thinking */
   thinkingLevel?: ThinkingLevel;
+  /** Optional explicit provider for model routing (takes precedence over name-based detection) */
+  provider?: ModelProvider;
 }
 
 /**
@@ -196,10 +199,11 @@ export function resolvePhaseModel(
 
   // Handle new PhaseModelEntry object format
   console.log(
-    `[ModelResolver] phaseModel is object format: model="${phaseModel.model}", thinkingLevel="${phaseModel.thinkingLevel}"`
+    `[ModelResolver] phaseModel is object format: model="${phaseModel.model}", thinkingLevel="${phaseModel.thinkingLevel}", provider="${phaseModel.provider}"`
   );
   return {
     model: resolveModelString(phaseModel.model, defaultModel),
     thinkingLevel: phaseModel.thinkingLevel,
+    provider: phaseModel.provider,
   };
 }

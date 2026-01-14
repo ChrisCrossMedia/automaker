@@ -100,9 +100,10 @@ ${getStructuredSpecPromptInstruction()}`;
   const settings = await settingsService?.getGlobalSettings();
   const phaseModelEntry =
     settings?.phaseModels?.specGenerationModel || DEFAULT_PHASE_MODELS.specGenerationModel;
-  const { model, thinkingLevel } = resolvePhaseModel(phaseModelEntry);
+  const { model, thinkingLevel, provider } = resolvePhaseModel(phaseModelEntry);
 
   logger.info('Using model:', model);
+  logger.info('Using provider:', provider || '(auto-detect)');
 
   let responseText = '';
   let structuredOutput: SpecOutput | null = null;
@@ -129,6 +130,7 @@ Your entire response should be valid JSON starting with { and ending with }. No 
   const result = await streamingQuery({
     prompt: finalPrompt,
     model,
+    provider, // Pass explicit provider for correct routing (especially for dynamic OpenCode models)
     cwd: projectPath,
     maxTurns: 250,
     allowedTools: ['Read', 'Glob', 'Grep'],

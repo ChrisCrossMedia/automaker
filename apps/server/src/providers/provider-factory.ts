@@ -130,6 +130,60 @@ export class ProviderFactory {
   }
 
   /**
+   * Get the appropriate provider for a given model ID with an optional explicit provider override
+   *
+   * This method allows callers to specify an explicit provider to use, bypassing
+   * the normal model-based provider detection. This is useful when the provider
+   * information is stored alongside the model (e.g., in PhaseModelEntry) and
+   * should take precedence over pattern-based detection.
+   *
+   * @param modelId Model identifier (e.g., "gpt-oss-120b", "claude-sonnet-4-20250514")
+   * @param explicitProvider Optional explicit provider to use (e.g., "opencode", "claude")
+   * @param options Optional settings
+   * @param options.throwOnDisconnected Throw error if provider is disconnected (default: true)
+   * @returns Provider instance
+   * @throws Error if provider is disconnected and throwOnDisconnected is true
+   *
+   * @example
+   * // Use explicit provider (bypasses model detection)
+   * const provider = ProviderFactory.getProviderForModelWithExplicit('gpt-oss-120b', 'opencode');
+   *
+   * // Fall back to model-based detection when no explicit provider
+   * const provider = ProviderFactory.getProviderForModelWithExplicit('claude-sonnet-4-20250514');
+   */
+  static getProviderForModelWithExplicit(
+    modelId: string,
+    explicitProvider?: ModelProvider,
+    options: { throwOnDisconnected?: boolean } = {}
+  ): BaseProvider {
+    const { throwOnDisconnected = true } = options;
+
+    // Use explicit provider if provided, otherwise detect from model ID
+    const providerName = explicitProvider || this.getProviderForModelName(modelId);
+
+    // Check if provider is disconnected
+    if (throwOnDisconnected && isProviderDisconnected(providerName)) {
+      throw new Error(
+        `${providerName.charAt(0).toUpperCase() + providerName.slice(1)} CLI is disconnected from the app. ` +
+          `Please go to Settings > Providers and click "Sign In" to reconnect.`
+      );
+    }
+
+    const provider = this.getProviderByName(providerName);
+
+    if (!provider) {
+      // Fallback to claude if provider not found
+      const claudeReg = providerRegistry.get('claude');
+      if (claudeReg) {
+        return claudeReg.factory();
+      }
+      throw new Error(`No provider found for model: ${modelId}`);
+    }
+
+    return provider;
+  }
+
+  /**
    * Get the provider name for a given model ID (without creating provider instance)
    */
   static getProviderForModelName(modelId: string): string {

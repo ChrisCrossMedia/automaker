@@ -545,7 +545,7 @@ export function PhaseModelSelector({
           key={model.id}
           value={model.label}
           onSelect={() => {
-            onChange({ model: model.id as CodexModelId });
+            onChange({ model: model.id as CodexModelId, provider: 'codex' });
             setOpen(false);
           }}
           className="group flex items-center justify-between py-2"
@@ -657,6 +657,7 @@ export function PhaseModelSelector({
                     onChange({
                       model: model.id as CodexModelId,
                       reasoningEffort: effort,
+                      provider: 'codex',
                     });
                     setExpandedCodexModel(null);
                     setOpen(false);
@@ -779,6 +780,7 @@ export function PhaseModelSelector({
                     onChange({
                       model: model.id as CodexModelId,
                       reasoningEffort: effort,
+                      provider: 'codex',
                     });
                     setExpandedCodexModel(null);
                     setOpen(false);
@@ -825,7 +827,7 @@ export function PhaseModelSelector({
         key={model.id}
         value={model.label}
         onSelect={() => {
-          onChange({ model: model.id as OpencodeModelId });
+          onChange({ model: model.id as OpencodeModelId, provider: 'opencode' });
           setOpen(false);
         }}
         className="group flex items-center justify-between py-2"
@@ -884,7 +886,7 @@ export function PhaseModelSelector({
         key={model.id}
         value={model.label}
         onSelect={() => {
-          onChange({ model: modelValue as CursorModelId });
+          onChange({ model: modelValue as CursorModelId, provider: 'cursor' });
           setOpen(false);
         }}
         className="group flex items-center justify-between py-2"
@@ -1002,6 +1004,7 @@ export function PhaseModelSelector({
                     onChange({
                       model: model.id as ModelAlias,
                       thinkingLevel: level,
+                      provider: 'claude',
                     });
                     setExpandedClaudeModel(null);
                     setOpen(false);
@@ -1123,6 +1126,7 @@ export function PhaseModelSelector({
                     onChange({
                       model: model.id as ModelAlias,
                       thinkingLevel: level,
+                      provider: 'claude',
                     });
                     setExpandedClaudeModel(null);
                     setOpen(false);
@@ -1217,7 +1221,7 @@ export function PhaseModelSelector({
                 <button
                   key={variant.id}
                   onClick={() => {
-                    onChange({ model: variant.id });
+                    onChange({ model: variant.id, provider: 'cursor' });
                     setExpandedGroup(null);
                     setOpen(false);
                   }}
@@ -1320,7 +1324,7 @@ export function PhaseModelSelector({
                 <button
                   key={variant.id}
                   onClick={() => {
-                    onChange({ model: variant.id });
+                    onChange({ model: variant.id, provider: 'cursor' });
                     setExpandedGroup(null);
                     setOpen(false);
                   }}

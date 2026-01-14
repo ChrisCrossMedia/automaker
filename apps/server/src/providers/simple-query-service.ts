@@ -20,6 +20,7 @@ import type {
   ContentBlock,
   ThinkingLevel,
   ReasoningEffort,
+  ModelProvider,
 } from '@automaker/types';
 import { stripProviderPrefix } from '@automaker/types';
 
@@ -31,6 +32,12 @@ export interface SimpleQueryOptions {
   prompt: string | Array<{ type: string; text?: string; source?: object }>;
   /** Model to use (with or without provider prefix) */
   model?: string;
+  /**
+   * Explicit provider to use for this query.
+   * When specified, bypasses model-based provider detection.
+   * Useful when the provider is known (e.g., from PhaseModelEntry.provider).
+   */
+  provider?: ModelProvider;
   /** Working directory for the query */
   cwd: string;
   /** System prompt (combined with user prompt for some providers) */
@@ -104,7 +111,8 @@ const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
  */
 export async function simpleQuery(options: SimpleQueryOptions): Promise<SimpleQueryResult> {
   const model = options.model || DEFAULT_MODEL;
-  const provider = ProviderFactory.getProviderForModel(model);
+  // Use explicit provider if specified, otherwise detect from model ID
+  const provider = ProviderFactory.getProviderForModelWithExplicit(model, options.provider);
   const bareModel = stripProviderPrefix(model);
 
   let responseText = '';
@@ -186,7 +194,8 @@ export async function simpleQuery(options: SimpleQueryOptions): Promise<SimpleQu
  */
 export async function streamingQuery(options: StreamingQueryOptions): Promise<SimpleQueryResult> {
   const model = options.model || DEFAULT_MODEL;
-  const provider = ProviderFactory.getProviderForModel(model);
+  // Use explicit provider if specified, otherwise detect from model ID
+  const provider = ProviderFactory.getProviderForModelWithExplicit(model, options.provider);
   const bareModel = stripProviderPrefix(model);
 
   let responseText = '';

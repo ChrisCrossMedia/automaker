@@ -112,6 +112,9 @@ const DEFAULT_CODEX_ADDITIONAL_DIRS: string[] = [];
  * - Claude models: Use thinkingLevel for extended thinking
  * - Codex models: Use reasoningEffort for reasoning intensity
  * - Cursor models: Handle thinking internally
+ *
+ * The optional `provider` field allows explicit provider routing for dynamic models
+ * that cannot be identified by their model ID pattern (e.g., custom OpenCode models).
  */
 export interface PhaseModelEntry {
   /** The model to use (supports Claude, Cursor, Codex, OpenCode, and dynamic provider IDs) */
@@ -120,6 +123,8 @@ export interface PhaseModelEntry {
   thinkingLevel?: ThinkingLevel;
   /** Reasoning effort level (only applies to Codex models, defaults to 'none') */
   reasoningEffort?: ReasoningEffort;
+  /** Explicit provider for model routing (optional, inferred from model ID if not specified) */
+  provider?: ModelProvider;
 }
 
 /**
