@@ -59,9 +59,14 @@ export function OpencodeSetupStep({ onNext, onBack, onSkip }: OpencodeSetupStepP
           installed: result.installed ?? false,
           version: result.version,
           path: result.path,
-          auth: result.auth,
-          installCommand: result.installCommand,
-          loginCommand: result.loginCommand,
+          auth: result.auth
+            ? {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              }
+            : undefined,
+          installCommand: result.installCommand ?? result.installCommands?.npm,
+          loginCommand: result.loginCommand ?? 'opencode auth login',
         };
         setOpencodeCliStatus(status);
 
@@ -124,7 +129,10 @@ export function OpencodeSetupStep({ onNext, onBack, onSkip }: OpencodeSetupStepP
               installed: result.installed ?? true,
               version: result.version,
               path: result.path,
-              auth: result.auth,
+              auth: {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              },
             } as OpencodeCliStatus);
             setIsLoggingIn(false);
             toast.success('Successfully logged in to OpenCode!');

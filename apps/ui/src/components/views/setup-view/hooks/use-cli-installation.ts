@@ -22,7 +22,7 @@ interface ProgressEvent {
 interface UseCliInstallationOptions {
   cliType: 'claude';
   installApi: () => Promise<InstallResult>;
-  onProgressEvent?: (callback: (progress: ProgressEvent) => void) => (() => void) | undefined;
+  onProgressEvent?: (callback: (progress: unknown) => void) => (() => void) | undefined;
   onSuccess?: () => void;
   getStoreState?: () => CliStatus | null;
 }
@@ -47,10 +47,11 @@ export function useCliInstallation({
       let unsubscribe: (() => void) | undefined;
 
       if (onProgressEvent) {
-        unsubscribe = onProgressEvent((progress: ProgressEvent) => {
-          if (progress.cli === cliType) {
+        unsubscribe = onProgressEvent((progress: unknown) => {
+          const progressEvent = progress as ProgressEvent;
+          if (progressEvent.cli === cliType) {
             setInstallProgress((prev) => ({
-              output: [...prev.output, progress.data || progress.type || ''],
+              output: [...prev.output, progressEvent.data || progressEvent.type || ''],
             }));
           }
         });

@@ -108,7 +108,7 @@ export function OpencodeSettingsTab() {
 
         // Load models if needed
         if (needsModels && api.setup.getOpencodeModels) {
-          const modelsResult = await api.setup.getOpencodeModels();
+          const modelsResult = await api.setup.getOpencodeModels(false);
           if (modelsResult.success && modelsResult.models) {
             setDynamicOpencodeModels(modelsResult.models);
           }

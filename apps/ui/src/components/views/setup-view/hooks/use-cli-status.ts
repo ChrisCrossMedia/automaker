@@ -1,5 +1,12 @@
 import { useState, useCallback } from 'react';
 import { createLogger } from '@automaker/utils/logger';
+import type {
+  ClaudeAuthStatus,
+  ClaudeAuthMethod,
+  CodexAuthStatus,
+  CodexAuthMethod,
+  CliStatus,
+} from '@/store/setup-store';
 
 interface CliStatusResult {
   success: boolean;
@@ -20,36 +27,11 @@ interface CliStatusResult {
   };
 }
 
-interface CliStatus {
-  installed: boolean;
-  path: string | null;
-  version: string | null;
-  method: string;
-}
-
-interface ClaudeAuthStatus {
-  authenticated: boolean;
-  method: string;
-  hasCredentialsFile: boolean;
-  oauthTokenValid?: boolean;
-  apiKeyValid?: boolean;
-  hasEnvOAuthToken?: boolean;
-  hasEnvApiKey?: boolean;
-}
-
-interface CodexAuthStatus {
-  authenticated: boolean;
-  method: string;
-  hasAuthFile?: boolean;
-  hasApiKey?: boolean;
-  hasEnvApiKey?: boolean;
-}
-
 interface UseCliStatusOptions {
   cliType: 'claude' | 'codex';
   statusApi: () => Promise<CliStatusResult>;
-  setCliStatus: (status: CliStatus) => void;
-  setAuthStatus: (status: ClaudeAuthStatus | CodexAuthStatus) => void;
+  setCliStatus: (status: CliStatus | null) => void;
+  setAuthStatus: (status: ClaudeAuthStatus | CodexAuthStatus | null) => void;
 }
 
 const VALID_AUTH_METHODS = {
@@ -102,7 +84,6 @@ export function useCliStatus({
           if (cliType === 'claude') {
             // Validate method is one of the expected Claude values, default to "none"
             const validMethods = VALID_AUTH_METHODS.claude;
-            type ClaudeAuthMethod = (typeof validMethods)[number];
             const method: ClaudeAuthMethod = validMethods.includes(
               result.auth.method as ClaudeAuthMethod
             )
@@ -121,7 +102,6 @@ export function useCliStatus({
           } else {
             // Validate method is one of the expected Codex values, default to "none"
             const validMethods = VALID_AUTH_METHODS.codex;
-            type CodexAuthMethod = (typeof validMethods)[number];
             const method: CodexAuthMethod = validMethods.includes(
               result.auth.method as CodexAuthMethod
             )

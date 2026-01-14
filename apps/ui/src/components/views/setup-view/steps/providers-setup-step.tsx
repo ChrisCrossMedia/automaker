@@ -126,8 +126,8 @@ function ClaudeContent() {
       if (result.success) {
         setClaudeCliStatus({
           installed: result.installed ?? false,
-          version: result.version,
-          path: result.path,
+          version: result.version ?? null,
+          path: result.path ?? null,
           method: 'none',
         });
 
@@ -466,7 +466,12 @@ function CursorContent() {
           installed: result.installed ?? false,
           version: result.version,
           path: result.path,
-          auth: result.auth,
+          auth: result.auth
+            ? {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              }
+            : undefined,
           installCommand: result.installCommand,
           loginCommand: result.loginCommand,
         });
@@ -517,7 +522,10 @@ function CursorContent() {
               installed: result.installed ?? true,
               version: result.version,
               path: result.path,
-              auth: result.auth,
+              auth: {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              },
             });
             setIsLoggingIn(false);
             toast.success('Successfully logged in to Cursor!');
@@ -700,14 +708,16 @@ function CodexContent() {
       if (result.success) {
         setCodexCliStatus({
           installed: result.installed ?? false,
-          version: result.version,
-          path: result.path,
+          version: result.version ?? null,
+          path: result.path ?? null,
           method: 'none',
         });
         if (result.auth?.authenticated) {
           setCodexAuthStatus({
             authenticated: true,
-            method: result.auth.method || 'cli_authenticated',
+            method:
+              (result.auth.method as 'cli_authenticated' | 'api_key' | 'api_key_env') ||
+              'cli_authenticated',
           });
           toast.success('Codex CLI is ready!');
         }
@@ -736,11 +746,12 @@ function CodexContent() {
     setIsSaving(true);
     try {
       const api = getElectronAPI();
-      if (!api.setup?.saveApiKey) {
+      const saveMethod = api.setup?.saveApiKey ?? api.setup?.storeApiKey;
+      if (!saveMethod) {
         toast.error('Save API not available');
         return;
       }
-      const result = await api.setup.saveApiKey('openai', apiKey);
+      const result = await saveMethod('openai', apiKey);
       if (result.success) {
         setApiKeys({ ...apiKeys, openai: apiKey });
         setCodexAuthStatus({ authenticated: true, method: 'api_key' });
@@ -994,9 +1005,14 @@ function OpencodeContent() {
           installed: result.installed ?? false,
           version: result.version,
           path: result.path,
-          auth: result.auth,
-          installCommand: result.installCommand,
-          loginCommand: result.loginCommand,
+          auth: result.auth
+            ? {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              }
+            : undefined,
+          installCommand: result.installCommand ?? result.installCommands?.npm,
+          loginCommand: result.loginCommand ?? 'opencode auth login',
         });
         if (result.auth?.authenticated) {
           toast.success('OpenCode CLI is ready!');
@@ -1045,7 +1061,10 @@ function OpencodeContent() {
               installed: result.installed ?? true,
               version: result.version,
               path: result.path,
-              auth: result.auth,
+              auth: {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              },
             });
             setIsLoggingIn(false);
             toast.success('Successfully logged in to OpenCode!');
@@ -1245,8 +1264,8 @@ export function ProvidersSetupStep({ onNext, onBack }: ProvidersSetupStepProps) 
         if (result.success) {
           setClaudeCliStatus({
             installed: result.installed ?? false,
-            version: result.version,
-            path: result.path,
+            version: result.version ?? null,
+            path: result.path ?? null,
             method: 'none',
           });
           // Note: Auth verification is handled by ClaudeContent component to avoid duplicate calls
@@ -1266,7 +1285,12 @@ export function ProvidersSetupStep({ onNext, onBack }: ProvidersSetupStepProps) 
             installed: result.installed ?? false,
             version: result.version,
             path: result.path,
-            auth: result.auth,
+            auth: result.auth
+              ? {
+                  authenticated: result.auth.authenticated,
+                  method: result.auth.method ?? 'none',
+                }
+              : undefined,
             installCommand: result.installCommand,
             loginCommand: result.loginCommand,
           });
@@ -1284,14 +1308,16 @@ export function ProvidersSetupStep({ onNext, onBack }: ProvidersSetupStepProps) 
         if (result.success) {
           setCodexCliStatus({
             installed: result.installed ?? false,
-            version: result.version,
-            path: result.path,
+            version: result.version ?? null,
+            path: result.path ?? null,
             method: 'none',
           });
           if (result.auth?.authenticated) {
             setCodexAuthStatus({
               authenticated: true,
-              method: result.auth.method || 'cli_authenticated',
+              method:
+                (result.auth.method as 'cli_authenticated' | 'api_key' | 'api_key_env') ||
+                'cli_authenticated',
             });
           }
         }
@@ -1310,9 +1336,14 @@ export function ProvidersSetupStep({ onNext, onBack }: ProvidersSetupStepProps) 
             installed: result.installed ?? false,
             version: result.version,
             path: result.path,
-            auth: result.auth,
-            installCommand: result.installCommand,
-            loginCommand: result.loginCommand,
+            auth: result.auth
+              ? {
+                  authenticated: result.auth.authenticated,
+                  method: result.auth.method ?? 'none',
+                }
+              : undefined,
+            installCommand: result.installCommand ?? result.installCommands?.npm,
+            loginCommand: result.loginCommand ?? 'opencode auth login',
           });
         }
       } catch {

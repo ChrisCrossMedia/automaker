@@ -59,7 +59,12 @@ export function CursorSetupStep({ onNext, onBack, onSkip }: CursorSetupStepProps
           installed: result.installed ?? false,
           version: result.version,
           path: result.path,
-          auth: result.auth,
+          auth: result.auth
+            ? {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              }
+            : undefined,
           installCommand: result.installCommand,
           loginCommand: result.loginCommand,
         };
@@ -124,7 +129,10 @@ export function CursorSetupStep({ onNext, onBack, onSkip }: CursorSetupStepProps
               installed: result.installed ?? true,
               version: result.version,
               path: result.path,
-              auth: result.auth,
+              auth: {
+                authenticated: result.auth.authenticated,
+                method: result.auth.method ?? 'none',
+              },
             } as CursorCliStatus);
             setIsLoggingIn(false);
             toast.success('Successfully logged in to Cursor!');

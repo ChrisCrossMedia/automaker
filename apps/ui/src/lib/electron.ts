@@ -1351,7 +1351,7 @@ interface SetupAPI {
       hasEnvApiKey?: boolean;
     };
   }>;
-  getOpencodeStatus: () => Promise<{
+  getCursorStatus: () => Promise<{
     success: boolean;
     status?: string;
     installed?: boolean;
@@ -1359,6 +1359,8 @@ interface SetupAPI {
     path?: string;
     error?: string;
     recommendation?: string;
+    installCommand?: string;
+    loginCommand?: string;
     installCommands?: {
       macos?: string;
       windows?: string;
@@ -1370,6 +1372,30 @@ interface SetupAPI {
       method?: string;
       hasApiKey?: boolean;
       hasEnvApiKey?: boolean;
+    };
+  }>;
+  getOpencodeStatus: () => Promise<{
+    success: boolean;
+    status?: string;
+    installed?: boolean;
+    version?: string;
+    path?: string;
+    error?: string;
+    recommendation?: string;
+    installCommand?: string;
+    loginCommand?: string;
+    installCommands?: {
+      macos?: string;
+      windows?: string;
+      linux?: string;
+      npm?: string;
+    };
+    auth?: {
+      authenticated: boolean;
+      method?: string;
+      hasApiKey?: boolean;
+      hasEnvApiKey?: boolean;
+      hasOAuthToken?: boolean;
       hasModel?: boolean;
       hasProvider?: boolean;
     };
@@ -1384,12 +1410,41 @@ interface SetupAPI {
     }>;
     error?: string;
   }>;
-  getOpencodeModels: (provider: string) => Promise<{
+  getOpencodeModels: (refresh?: boolean) => Promise<{
     success: boolean;
-    models?: string[];
+    models?: Array<{
+      id: string;
+      name: string;
+      modelString: string;
+      provider: string;
+      description: string;
+      supportsTools?: boolean;
+      supportsVision?: boolean;
+      tier?: 'basic' | 'standard' | 'premium';
+      default?: boolean;
+    }>;
+    count?: number;
+    cached?: boolean;
+    error?: string;
+  }>;
+  refreshOpencodeModels: () => Promise<{
+    success: boolean;
+    models?: Array<{
+      id: string;
+      name: string;
+      modelString: string;
+      provider: string;
+      description: string;
+      supportsTools?: boolean;
+      supportsVision?: boolean;
+      tier?: 'basic' | 'standard' | 'premium';
+      default?: boolean;
+    }>;
+    count?: number;
     error?: string;
   }>;
   storeApiKey: (provider: string, apiKey: string) => Promise<{ success: boolean; error?: string }>;
+  saveApiKey: (provider: string, apiKey: string) => Promise<{ success: boolean; error?: string }>;
   getApiKeys: () => Promise<{
     success: boolean;
     hasAnthropicKey: boolean;
@@ -1523,6 +1578,25 @@ function createMockSetupAPI(): SetupAPI {
       };
     },
 
+    getCursorStatus: async () => {
+      console.log('[Mock] Get Cursor Status');
+      return {
+        success: true,
+        status: 'not_installed',
+        installed: false,
+        recommendation: 'Install Cursor CLI',
+        installCommand: 'curl https://cursor.com/install -fsS | bash',
+        loginCommand: 'cursor-agent login',
+        installCommands: {
+          macos: 'curl https://cursor.com/install -fsS | bash',
+          npm: 'npm install -g @anthropic/cursor-agent',
+        },
+        auth: {
+          authenticated: false,
+        },
+      };
+    },
+
     getOpencodeStatus: async () => {
       console.log('[Mock] Get Opencode Status');
       return {
@@ -1530,6 +1604,8 @@ function createMockSetupAPI(): SetupAPI {
         status: 'not_installed',
         installed: false,
         recommendation: 'Install Opencode CLI',
+        installCommand: 'npm install -g opencode',
+        loginCommand: 'opencode auth login',
         installCommands: {
           npm: 'npm install -g opencode',
         },
@@ -1551,17 +1627,56 @@ function createMockSetupAPI(): SetupAPI {
       };
     },
 
-    getOpencodeModels: async (_provider: string) => {
+    getOpencodeModels: async (_refresh?: boolean) => {
       console.log('[Mock] Get Opencode Models');
       return {
         success: true,
-        models: ['gpt-4', 'gpt-3.5-turbo'],
+        models: [
+          {
+            id: 'gpt-4',
+            name: 'GPT-4',
+            modelString: 'gpt-4',
+            provider: 'openai',
+            description: 'OpenAI GPT-4',
+          },
+          {
+            id: 'gpt-3.5-turbo',
+            name: 'GPT-3.5 Turbo',
+            modelString: 'gpt-3.5-turbo',
+            provider: 'openai',
+            description: 'OpenAI GPT-3.5 Turbo',
+          },
+        ],
+        count: 2,
+        cached: true,
+      };
+    },
+
+    refreshOpencodeModels: async () => {
+      console.log('[Mock] Refresh Opencode Models');
+      return {
+        success: true,
+        models: [
+          {
+            id: 'gpt-4',
+            name: 'GPT-4',
+            modelString: 'gpt-4',
+            provider: 'openai',
+            description: 'OpenAI GPT-4',
+          },
+        ],
+        count: 1,
       };
     },
 
     storeApiKey: async (provider: string, _apiKey: string) => {
       console.log('[Mock] Storing API key for:', provider);
       // In mock mode, we just pretend to store it (it's already in the app store)
+      return { success: true };
+    },
+
+    saveApiKey: async (provider: string, _apiKey: string) => {
+      console.log('[Mock] Saving API key for:', provider);
       return { success: true };
     },
 

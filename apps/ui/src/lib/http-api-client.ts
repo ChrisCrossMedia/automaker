@@ -1489,6 +1489,14 @@ export class HttpApiClient implements ElectronAPI {
       error?: string;
     }> => this.post('/api/setup/store-api-key', { provider, apiKey }),
 
+    saveApiKey: (
+      provider: string,
+      apiKey: string
+    ): Promise<{
+      success: boolean;
+      error?: string;
+    }> => this.post('/api/setup/store-api-key', { provider, apiKey }),
+
     deleteApiKey: (
       provider: string
     ): Promise<{
@@ -1535,15 +1543,25 @@ export class HttpApiClient implements ElectronAPI {
     // Cursor CLI methods
     getCursorStatus: (): Promise<{
       success: boolean;
+      status?: string;
       installed?: boolean;
-      version?: string | null;
-      path?: string | null;
-      auth?: {
-        authenticated: boolean;
-        method: string;
-      };
+      version?: string;
+      path?: string;
+      recommendation?: string;
       installCommand?: string;
       loginCommand?: string;
+      installCommands?: {
+        macos?: string;
+        windows?: string;
+        linux?: string;
+        npm?: string;
+      };
+      auth?: {
+        authenticated: boolean;
+        method?: string;
+        hasApiKey?: boolean;
+        hasEnvApiKey?: boolean;
+      };
       error?: string;
     }> => this.get('/api/setup/cursor-status'),
 
@@ -1779,9 +1797,9 @@ export class HttpApiClient implements ElectronAPI {
         modelString: string;
         provider: string;
         description: string;
-        supportsTools: boolean;
-        supportsVision: boolean;
-        tier: string;
+        supportsTools?: boolean;
+        supportsVision?: boolean;
+        tier?: 'basic' | 'standard' | 'premium';
         default?: boolean;
       }>;
       count?: number;
@@ -1797,9 +1815,9 @@ export class HttpApiClient implements ElectronAPI {
         modelString: string;
         provider: string;
         description: string;
-        supportsTools: boolean;
-        supportsVision: boolean;
-        tier: string;
+        supportsTools?: boolean;
+        supportsVision?: boolean;
+        tier?: 'basic' | 'standard' | 'premium';
         default?: boolean;
       }>;
       count?: number;
